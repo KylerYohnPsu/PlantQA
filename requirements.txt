@@ -5,3 +5,5 @@ numpy
 tensorflow
 matplotlib
 pandas
+colorlog
+jupyter
