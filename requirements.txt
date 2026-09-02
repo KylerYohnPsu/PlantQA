@@ -1,0 +1,6 @@
+# add any python libraries necessary to run the system to this file
+# You can install all of the libraries by running `pip install -r requirements.txt`
+
+numpy
+tensorflow
+matplotlib
