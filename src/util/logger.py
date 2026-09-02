@@ -2,16 +2,7 @@ import logging
 import threading
 import colorlog
 import sys
-
-# The colors of each log type
-# TODO: move to config.py
-LOG_COLORS= {
-	"DEBUG": "cyan",
-	"INFO": "black",
-	"WARNING": "yellow",
-	"ERROR": "red",
-	"CRITICAL": "bold_red",
-}
+from src.config import LOG_LEVEL, LOG_COLORS
 
 class Logger:
 	"""
@@ -57,7 +48,7 @@ class Logger:
 	@classmethod
 	def get(log_class):
 		if log_class._logger is None:
-			log_class._initialize()
+			log_class._initialize(level=LOG_LEVEL)
 		return log_class._logger
 		
 	#### THESE ARE THE FUNCTIONS YOU CALL TO LOG ######
