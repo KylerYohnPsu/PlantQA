@@ -23,6 +23,7 @@ class Logger:
 		if log_class._logger is not None:
 			return # already initalized
 			
+		# Lock, so we don't accidentally initialize twice at the same time
 		with log_class._lock:
 			logger= colorlog.getLogger(name)
 			logger.setLevel(level)
