@@ -2,7 +2,7 @@ import logging
 import threading
 import colorlog
 import sys
-from src.config import LOG_LEVEL, LOG_COLORS
+from src.config import LOG_LEVEL, LOG_COLORS, LOG_PATTERN
 
 class Logger:
 	"""
@@ -33,7 +33,7 @@ class Logger:
 			
 			# Format all logs
 			formatter= colorlog.ColoredFormatter(
-				"%(log_color)s%(asctime)s [%(levelname)-8s]: %(message)s%(reset)s",
+				LOG_PATTERN,
 				datefmt="%H:%M:%S",
 				log_colors= LOG_COLORS
 			)
