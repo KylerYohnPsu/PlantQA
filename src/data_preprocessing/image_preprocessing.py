@@ -67,10 +67,13 @@ def resize_image(image: np.ndarray, new_size: tuple[int,int]= (500,500)) -> np.n
     resize the given image to the given size
     PARAM:
         image: np.ndarray | The image to resize
-        new_size: (int, int) | The (height, width) you want to resize to
+        new_size: (int, int) | The (width, height) you want to resize to
     RETURN:
         np.ndarray: The resized image
     """
+    if new_size[0] <= 0 or new_size[1] <= 0:
+        return None # invalid size
+    
     pil_image= Image.fromarray(image)
     resized_image= pil_image.resize(new_size, Image.BILINEAR)
     resized_np_image= np.array(resized_image)

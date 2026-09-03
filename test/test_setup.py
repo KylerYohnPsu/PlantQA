@@ -6,7 +6,6 @@ import sys
 import numpy
 import pandas
 import tensorflow as tf
-import platform
 import pytest
 import matplotlib as mpl
 import PIL as pillow
