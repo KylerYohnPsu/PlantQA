@@ -9,6 +9,7 @@ import tensorflow as tf
 import platform
 import pytest
 import matplotlib as mpl
+import PIL as pillow
 
 def test_python_version():
     """ Verify the python version is supported """
@@ -20,6 +21,7 @@ def test_packages():
     assert pandas.__version__
     assert tf.__version__
     assert mpl.__version__
+    assert pillow.__version__
 
 def test_tensorflow():
     """ Make sure tensorflow works """

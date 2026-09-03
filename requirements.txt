@@ -8,3 +8,4 @@ pandas
 colorlog
 jupyter
 pytest
+pillow
