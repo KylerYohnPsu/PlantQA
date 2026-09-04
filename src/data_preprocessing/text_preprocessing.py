@@ -1,8 +1,29 @@
 from src.util.logger import Logger
 import re
 import nltk
+import pandas as pd
+import pathlib
 
 nltk.download('stopwords')
+
+def load_csv(csv_path: str):
+    """
+    Load a specified csv file into a pandas dataframe
+    PARAM:
+        csv_path: str | The path to the csv file to load
+    RETURN:
+        dataframe: a pandas dataframe of the csv data
+    """
+    # verify the file exists
+    path= pathlib.Path(csv_path)
+    if not path.is_file():
+        Logger.error(f"[load_csv] Unable to open {csv_path}.")
+        return None
+    
+    # load and return the data
+    data= pd.read_csv(csv_path)
+    Logger.debug(f"[load_csv] Successfully loaded {csv_path} into dataframe")
+    return data
 
 def remove_symbols(text: str) -> str:
     """"

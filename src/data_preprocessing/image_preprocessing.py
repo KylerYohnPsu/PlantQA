@@ -2,6 +2,7 @@ from src.util.logger import Logger
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
+import pathlib
 
 def load_image(image_path: str) -> np.ndarray:
     """
@@ -11,6 +12,12 @@ def load_image(image_path: str) -> np.ndarray:
     RETURN:
         np.ndarray: The image as a np RGB array.
     """
+    #verify the image exists first
+    path= pathlib.Path(image_path)
+    if not path.is_file():
+        Logger.error(f"[load_image] Unable to open {image_path}.")
+        return None
+
     # Load and convert while the file is open so the returned array is fully
     with Image.open(image_path) as img:
         loaded_image = np.asarray(img.convert("RGB"))
