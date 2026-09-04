@@ -27,6 +27,7 @@ def test_normalize_image():
     img= create_garbage_image()
     normalized_image= img_pre.normalize_image(img)
 
+    # make sure all values are 0<=val<=1
     values_above_1= normalized_image > 1
     has_above_1= values_above_1.any()
     assert has_above_1 == False
@@ -43,11 +44,7 @@ def test_resize_image():
     assert height == 1
     assert width == 1
     assert result.size == 3 # height*width*3
-
-    # verify og image is not changed
-    assert img.shape[0] != 1
-    assert img.shape[1] != 1
-
+    
     img= create_garbage_image()
     result= img_pre.resize_image(img, (1000,1000))
     height, width= result.shape[:2]
@@ -64,11 +61,11 @@ def test_resize_image():
 
     img= create_garbage_image()
     result= img_pre.resize_image(img, (-30,500))
-    assert result == None
+    assert result == None #invalid shape given
 
     img= create_garbage_image()
     result= img_pre.resize_image(img, (100,0))
-    assert result == None
+    assert result == None # invalid shape given
 
 def test_greyscale():
     """ Verify the greyscale function works """

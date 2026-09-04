@@ -9,3 +9,6 @@ colorlog
 jupyter
 pytest
 pillow
+wordcloud
+nltk
+scikit-learn

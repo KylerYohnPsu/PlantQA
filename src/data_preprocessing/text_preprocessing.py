@@ -1,5 +1,8 @@
 from src.util.logger import Logger
 import re
+import nltk
+
+nltk.download('stopwords')
 
 def remove_symbols(text: str) -> str:
     """"
@@ -25,3 +28,52 @@ def normalize_whitespace(text: str) -> str:
     normalized_text= re.sub(regex, " ", text)
     normalized_text= normalized_text.strip()
     return normalized_text
+
+def normalize_text(text: str) -> str:
+    """
+    Normalize text by removing non-words/numbers, making everything lowercase, and removing whitespace
+    PARAM:
+        text: str | the text to normalize
+    RETURN:
+        str: the normalized text
+    """
+    text= text.lower()
+    text= remove_symbols(text)
+    text= normalize_whitespace(text)
+    return text
+
+def remove_stop_words(text: str):
+    """
+    Remove stopwords from a text
+    PARAM:
+        text: str | The text to remove stop words from
+    RETURN:
+        str: The text without stopwords
+    """
+    # Get the stop words we want to remove
+    stop_words= nltk.corpus.stopwords
+    stop_words= set(stop_words.words("english"))
+
+    # break the text into a list for easy iteration
+    text_words= text.split()
+
+    acceptable_words= []
+    for word in text_words:
+        if word.lower() not in stop_words:
+            acceptable_words.append(word)
+
+    # put the acceptable words back into a single text "sentence"
+    cleaned_text= " ".join(acceptable_words)
+    return cleaned_text
+    
+
+        
+
+
+def preprocess_text(text: str):
+    """
+    preprocess a single text entry
+    placeholder, remove/edit if you want to
+    """
+    return
+
