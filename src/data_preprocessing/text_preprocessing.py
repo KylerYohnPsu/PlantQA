@@ -63,6 +63,9 @@ def normalize_text(text: str) -> str:
     text= normalize_whitespace(text)
     return text
 
+###############
+#NOTE: The nltk stop words may be too intensive, because they remove words like "what', "why", "how", etc., which will likely be important for question processing
+# We may want to use a different library for stop words, or define our own set of stop words
 def remove_stop_words(text: str):
     """
     Remove stopwords from a text
@@ -90,7 +93,17 @@ def remove_stop_words(text: str):
 def preprocess_text(text: str):
     """
     preprocess a single text entry
-    placeholder, remove/edit if you want to
+    normalize and clean the text
+    PARAM:
+        text: str | The text to preprocess
+    RETURN:
+        str: preprocessed text, subject change
     """
-    return
+
+    #TODO: Do we want to do tokenization and whatnot hear, or do we only want to do text cleaning/normalization here
+
+    normalized_text= normalize_text(text)
+    simplified_text= remove_stop_words(normalized_text)
+
+    return simplified_text
 
