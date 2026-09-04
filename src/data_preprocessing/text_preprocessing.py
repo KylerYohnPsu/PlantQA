@@ -65,10 +65,6 @@ def remove_stop_words(text: str):
     # put the acceptable words back into a single text "sentence"
     cleaned_text= " ".join(acceptable_words)
     return cleaned_text
-    
-
-        
-
 
 def preprocess_text(text: str):
     """
