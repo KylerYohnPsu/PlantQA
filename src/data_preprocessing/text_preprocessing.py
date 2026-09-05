@@ -4,7 +4,8 @@ import nltk
 import pandas as pd
 import pathlib
 
-nltk.download('stopwords')
+# build the set of stopwords we will use to remove stop words from text
+STOP_WORDS = set(nltk.corpus.stopwords.words("english"))
 
 def load_csv(csv_path: str):
     """
@@ -74,16 +75,12 @@ def remove_stop_words(text: str):
     RETURN:
         str: The text without stopwords
     """
-    # Get the stop words we want to remove
-    stop_words= nltk.corpus.stopwords
-    stop_words= set(stop_words.words("english"))
-
     # break the text into a list for easy iteration
     text_words= text.split()
 
     acceptable_words= []
     for word in text_words:
-        if word.lower() not in stop_words:
+        if word.lower() not in STOP_WORDS:
             acceptable_words.append(word)
 
     # put the acceptable words back into a single text "sentence"

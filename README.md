@@ -4,10 +4,22 @@ This is a VQA agent specialized in identifying plant life, diseases on plant, an
 
 ## Installation
 
-1. Create your virtual environment: `python3 -m venv venv`
-2. Source your venv: `source venv/bin/activate`
-3. Install pip libraries: `pip install -r requirements.txt`
+To install the system, execute the setup script:
 
+`./setup.sh`
+
+This script does the following:
+1. Creates a virtual environment named 'venv'
+2. Installs required python libraries into venv
+3. Installs sub-requirements (like the nltk stop words package)
+4. Runs pytest to verify installation
+
+The script will exit if any of the steps fail.
+
+## Running
+
+After the project has been installed, you can execute code through the `Capstone_Executables.ipynb` notebook.
+Ensure the kernel the notebook is using is the created `venv` environment.
 
 ## Testing
 
