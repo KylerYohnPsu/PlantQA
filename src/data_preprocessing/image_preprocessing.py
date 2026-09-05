@@ -3,6 +3,7 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 import pathlib
+import cv2
 
 def load_image(image_path: str) -> np.ndarray:
     """
@@ -25,7 +26,19 @@ def load_image(image_path: str) -> np.ndarray:
     Logger.debug(f"Loaded image: {image_path}")
 
     return loaded_image
-    
+
+def save_image(image: np.ndarray, save_path: str):
+    """
+    Save the given image to the given path
+    PARAM:
+        image: np.ndarray | the image you want to save
+        save_path: str | the path to save the image to
+    """
+    # cv2 uses bgr, so it will try to invert the colors of the image when it saves it
+    # to avoid this annoying quirk, we need to convert our image to bgr beforehand, so cv2 flips it back to rgb when saving
+    image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    cv2.imwrite(save_path, image_bgr)
+
 def show_image(image: np.ndarray | Image.Image):
     """
     Display a np array image using matplotlib

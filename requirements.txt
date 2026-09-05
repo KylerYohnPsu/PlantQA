@@ -12,3 +12,4 @@ pillow
 wordcloud
 nltk
 scikit-learn
+opencv-python

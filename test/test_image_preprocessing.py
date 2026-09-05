@@ -3,29 +3,22 @@
 import numpy as np
 import src.data_preprocessing.image_preprocessing as img_pre
 from src.util.logger import Logger
+import pytest
 
-def create_garbage_image():
-    """Create a valid RGB image with random height and width."""
-
-    random_generator = np.random.default_rng()
-
-    # random height/width between 1 and 1000
-    height = random_generator.integers(1, 1001)
-    width = random_generator.integers(1, 1001)
-
-    # make an rgb image that is heightxwidth in size
-    image = random_generator.integers(
-        0, 256,
-        size=(height, width, 3),
-        dtype=np.uint8,
-    )
-
+@pytest.fixture
+def simple_image():
+    """ make a simple rgb numpy image """
+    # 2x3 rgb image data
+    image_data= [
+            [[255, 0, 0], [0, 255, 0], [0, 0, 255]],
+            [[255, 255, 255], [0, 0, 0], [128, 128, 128]],
+        ]
+    image= np.array(image_data, dtype=np.uint8)
     return image
 
-def test_normalize_image():
+def test_normalize_image(simple_image):
     """ Verify the normalize_image function works """
-    img= create_garbage_image()
-    normalized_image= img_pre.normalize_image(img)
+    normalized_image= img_pre.normalize_image(simple_image)
 
     # make sure all values are 0<=val<=1
     values_above_1= normalized_image > 1
@@ -36,48 +29,61 @@ def test_normalize_image():
     has_below_0= values_below_0.any()
     assert has_below_0 == False
 
-def test_resize_image():
+@pytest.mark.parametrize(
+    (  "new_size",     "expected_resized_shape"),
+    [
+    (     (1,1),               (1,1,3)          ),
+    (  (1000,1000),        (1000, 1000, 3)      ),
+    (   (100,500),            (500, 100, 3)     ),
+    ],
+)
+def test_resize_image(simple_image, new_size, expected_resized_shape):
     """ Verify the resize_image function works """
-    img= create_garbage_image()
-    result= img_pre.resize_image(img, (1,1))
-    height, width= result.shape[:2]
-    assert height == 1
-    assert width == 1
-    assert result.size == 3 # height*width*3
-    
-    img= create_garbage_image()
-    result= img_pre.resize_image(img, (1000,1000))
-    height, width= result.shape[:2]
-    assert height == 1000
-    assert width == 1000
-    assert result.size == 3000000 # height*width*3
+    result= img_pre.resize_image(simple_image, new_size)
 
-    img= create_garbage_image()
-    result= img_pre.resize_image(img, (100,500))
-    height, width= result.shape[:2]
-    assert height == 500
-    assert width == 100
-    assert result.size == 150000 # height*width*3
+    assert result.shape == expected_resized_shape
 
-    img= create_garbage_image()
-    result= img_pre.resize_image(img, (-30,500))
-    assert result == None #invalid shape given
 
-    img= create_garbage_image()
-    result= img_pre.resize_image(img, (100,0))
-    assert result == None # invalid shape given
+@pytest.mark.parametrize(
+    ("invalid_new_size"),
+    [
+    (-1, -1),
+    (-1, 100),
+    (100, -1),
+    (0, 1)
+    ],
+)
+def test_resize_image_invalid_size(simple_image, invalid_new_size):
+    """ Verify resize_image properly rejects bad sizes """
+    result= img_pre.resize_image(simple_image, invalid_new_size)
+    assert result is None
 
-def test_greyscale():
+def test_greyscale(simple_image):
     """ Verify the greyscale function works """
-    img= create_garbage_image()
+    height, width= simple_image.shape[:2]
 
-    height, width= img.shape[:2]
-
-    grey= img_pre.convert_to_greyscale(img)
+    grey= img_pre.convert_to_greyscale(simple_image)
 
     assert grey.size == height*width*1 #greyscale sizing
     assert grey.size != height*width*3 #rgb sizing
+    assert grey.shape == (2,3) # we knwo simple_image is a 2x3 rgb image, so greyscale, should be 2x3 with no rgb values
 
+def test_load_image_invalid_path(tmp_path):
+    """ verify load_image does not try to get invalid paths """
+    bad_path= tmp_path / "bad_file.png"
+    result= img_pre.load_image(bad_path)
+    assert result is None
 
+def test_save_and_load_image(tmp_path, simple_image):
+    """ verify saving and loading the saved image works """
+    image_path= tmp_path / "test_save_image.png"
+    img_pre.save_image(simple_image, image_path)
+
+    assert image_path.exists()
+
+    loaded_image= img_pre.load_image(image_path)
+
+    assert loaded_image is not None
+    assert np.array_equal(loaded_image, simple_image) #make sure the loaded version matches the og version
 
     
