@@ -6,6 +6,7 @@ import pandas as pd
 import wordcloud
 from src.util.logger import Logger, bold, italic, underline
 import matplotlib.pyplot as plt
+import nltk
 
 def explore_data(data: pd.DataFrame, name: str="Data"): 
     """ Explore a single pandas dataframe """
@@ -74,4 +75,63 @@ def make_column_distribution_graph(data: pd.DataFrame, column_name: str, show_co
             plt.text( x_pos, y_pos, str(count), ha="center", va="bottom")
 
     plt.tight_layout()
+    plt.show()
+
+def make_wordcloud(data: pd.DataFrame, column_name: str): 
+    """
+    Make a wordcloud that shows the most frequent words in a dataframe column
+    PARAM:
+        data: pd.DataFrame | The dataframe that holds the column we want
+        column_name: str | the column that holds the data we want
+    """
+    # Get the column we want and make sure all entries are valid for a wordcloud
+    column= data[column_name]
+    column= column.dropna()
+    column= column.astype(str)
+
+     # this will help make the graph title look nicer
+    pretty_column_name= column_name.replace("_", " ").title()
+    
+    # put all the text into one big string
+    all_text= " ".join(column)
+
+    # make the wordcloud
+    word_cloud= wordcloud.WordCloud(width=800, height=400, background_color="black").generate(all_text)
+
+    # show the wordcloud
+    plt.figure(figsize=(8,4))
+    plt.imshow(word_cloud)
+    plt.axis("off")
+    plt.title(f"Wordcloud of text from {pretty_column_name}")
+    plt.show()
+
+def make_most_frequent_words_distribution(data: pd.DataFrame, column_name: str, top_n_words: int=20):
+    """
+    Make a frequency distribution that shows the most common words in a column of data
+    PARAM:
+        data: pd.DataFrame | The dataframe the data lives in
+        column_name: str | The name of the column we want to make a distribution of
+        top_n_words: int | How many of the top occurring words to graph
+    """
+    # Get the column we want and make sure all entries are valid for a wordcloud
+    column= data[column_name]
+    column= column.dropna()
+    column= column.astype(str)
+
+    # this will help make the graph title look nicer
+    pretty_column_name= column_name.replace("_", " ").title()
+
+    # put all the words into a single string
+    all_text= " ".join(column)
+
+    # split the big string into a list, where each entry is a word
+    all_words= all_text.split(" ")
+
+    #create a distribution of the top n words in the column
+    distribution= nltk.probability.FreqDist(all_words)
+
+    # graph the distribution
+    plt.figure()
+    distribution.plot(top_n_words)
+    plt.title(f"Top {top_n_words} words that appear in {pretty_column_name}")
     plt.show()
