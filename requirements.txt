@@ -14,3 +14,4 @@ wordcloud
 nltk
 scikit-learn
 opencv-python
+huggingface_hub

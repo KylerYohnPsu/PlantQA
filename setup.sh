@@ -30,5 +30,13 @@ printf "${GREEN}Successfully installed specific library requirements!${RESET}\n"
 printf "${BLUE}Running pytest to verify everything installed correctly...${RESET}\n"
 python3 -m pytest -v
 printf "${BLUE}Pytest finished running, please vrerify no major tests failed...${RESET}\n"
-printf "${BLUE}If nothing failed in a major way, then the setup succeeded!${RESET}\n"
+printf "${BLUE}If nothing failed in a major way, then the setup succeeded!${RESET}\n\n\n"
 
+
+read -p "Setup complete.  Do you want to download the data now? (y/n): " answer
+
+if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
+    ./download_data.sh
+else
+    printf "${BLUE}When you are ready, download the data with the download_data.sh script.${RESET}\n"
+fi
