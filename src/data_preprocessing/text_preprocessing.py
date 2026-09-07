@@ -5,6 +5,7 @@ import pandas as pd
 import pathlib
 
 # build the set of stopwords we will use to remove stop words from text
+# Do that here, so we don't have to build it each time we call the stop word function
 STOP_WORDS = set(nltk.corpus.stopwords.words("english"))
 
 
@@ -83,12 +84,7 @@ def clean_dataframe(data: pd.DataFrame, columns_to_remove: list[str]):
     data.dropna(inplace=True)
 
     # drop duplicate entries
-    data.drop_duplicates(inplace=True)
-
-
-
-
-        
+    data.drop_duplicates(inplace=True)     
 
 ##############################################################
 ########## INDIVIDUAL STRING EDITING FUNCTIONS ################

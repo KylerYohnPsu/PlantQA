@@ -8,7 +8,8 @@ from src.util.logger import Logger, bold, italic, underline
 import matplotlib.pyplot as plt
 import nltk
 
-def explore_data(data: pd.DataFrame, name: str="Data"): 
+def explore_data(data: pd.DataFrame, col_dist_args: list[dict], wordcloud_cols: list[str],
+                 word_freq_dist_cols: list[str], top_n_words: int=20, name: str="Data"): 
     """ Explore a single pandas dataframe """
     info= data.info()
     Logger.info(f"{name} Info:\n{info}")
@@ -23,6 +24,54 @@ def explore_data(data: pd.DataFrame, name: str="Data"):
     head= data.head(1)
     loggable_head= stringify_dataframe_entry(head)
     Logger.info(f"{name} Head:\n{loggable_head}")
+
+    print("\n\n\n\n\n")
+    Logger.info(f"\n\n-------- {name} Class Frequency Distributions --------\n\n")
+
+    make_column_distributions(data, col_dist_args)
+
+    print("\n\n\n\n\n")
+    Logger.info(f"\n\n-------- {name} WordClouds --------\n\n")
+    make_wordclouds(data, wordcloud_cols)
+
+    print("\n\n\n\n\n")
+    Logger.info(f"\n\n-------- {name} Word Frequency Distributions --------\n\n")
+    make_word_frequency_distributions(data, word_freq_dist_cols, top_n_words=top_n_words)
+
+def make_word_frequency_distributions(data: pd.DataFrame, columns: list[str], top_n_words: int= 20):
+    """
+    Make top word frequency distributions for the specified columns
+    PARAM:
+        data: pd.DataFrame | The data
+        columns: list[str] | The names of the columns in the data that we want to make distributions for
+        top_n_words: int | The to N most frequent words to show in the distribution (i.e. top 20 words)
+    """
+    for col in columns:
+        make_most_frequent_words_distribution(data, col, top_n_words=top_n_words)
+
+def make_wordclouds(data: pd.DataFrame, wordcloud_cols: list[str]):
+    """
+    Make the wordclouds for the specified columns
+    PARAM:
+        data: pd.DataFrame | The data to make clouds out of
+        wordcloud_cols: list[str] | The names of the columns to make wordclouds out of
+    """
+    for column in wordcloud_cols:
+        make_wordcloud(data, column)
+
+
+def make_column_distributions(data: pd.DataFrame, col_dist_args: list[tuple]):
+    """
+    Iterate through the given column distribution arguments and use them to make distributions
+    PARAM:
+        data: pd.DataFrame | The dataframe that holds the data
+        col_dist_args: list[dict] | A list of dictionaries, where each dictionary contains the args for make_column_distribution_graph
+    """
+    for args in col_dist_args:
+        col_name= args['column']
+        fig_size= args['figure_size']
+        show_counts= args['show_counts']
+        make_column_distribution_graph(data, col_name, size=fig_size, show_counts=show_counts)
 
 
 def stringify_dataframe_entry(entry: pd.DataFrame) -> str:
