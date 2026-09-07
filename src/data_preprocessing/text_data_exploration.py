@@ -9,8 +9,6 @@ import matplotlib.pyplot as plt
 
 def explore_data(data: pd.DataFrame, name: str="Data"): 
     """ Explore a single pandas dataframe """
-
-   
     info= data.info()
     Logger.info(f"{name} Info:\n{info}")
 
