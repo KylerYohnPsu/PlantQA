@@ -12,7 +12,7 @@ RESET='\033[0m'
 
 # setup venv
 printf "${BLUE}Building python virtual enviornment...${RESET}\n"
-python3 -m venv venv
+python3.10 -m venv venv
 source venv/bin/activate
 printf "${GREEN}Successfully built python virtual environment!${RESET}\n"
 

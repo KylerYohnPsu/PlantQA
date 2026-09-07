@@ -13,7 +13,7 @@ import nltk
 
 def test_python_version():
     """ Verify the python version is supported """
-    assert sys.version_info[:2] == (3,10)
+    assert sys.version_info[:2] == (3,10), "System expects Python3.10, please check the python version you are using."
 
 def test_packages():
     """ Verify vital packages are installed """
