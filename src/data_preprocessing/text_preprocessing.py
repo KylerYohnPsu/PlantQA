@@ -7,6 +7,7 @@ import pathlib
 # build the set of stopwords we will use to remove stop words from text
 STOP_WORDS = set(nltk.corpus.stopwords.words("english"))
 
+
 def load_csv(csv_path: str):
     """
     Load a specified csv file into a pandas dataframe
@@ -25,6 +26,74 @@ def load_csv(csv_path: str):
     data= pd.read_csv(csv_path)
     Logger.debug(f"[load_csv] Successfully loaded {csv_path} into dataframe")
     return data
+
+def preprocess_dataframe(data: pd.DataFrame, cols_to_normalize: list[str], cols_to_remove: list[str], na_col_fill_pairs: list[tuple]):
+    """
+    Grand daddy preprocessing function.
+    Just calls other preprocessing functions, that way we only have to call one function to do all the work
+    PARAM:
+        data: pd.DataFrame | The dataframe to preprocess
+        cols_to_normalize: list[str] | The columns of text data to normalize
+        cols_to_remove: list[str] | The columns to remove from the dataset
+        na_col_fill_pairs: list[tuple] | (column_name, na_replacement_value) pairs
+    """
+    fill_na_values(data, na_col_fill_pairs)
+    preprocess_text_columns(data, cols_to_normalize)
+    clean_dataframe(data, cols_to_remove)
+
+def preprocess_text_columns(data: pd.DataFrame, columns: list[str]):
+    """
+    Preprocess the text in a dataframe
+    Process the specified columns
+    PARAM:
+        data: pd.DataFrame | The dataframe to edit
+        columns: list[str] | The names of the columns to edit
+    """
+    for column in columns:
+        # make sure the column is all strings to prevent errors
+        data[column]= data[column].astype(str)
+
+        # remove symbols, normalize whitespace, make lower, etc
+        data[column]= data[column].apply(normalize_text)
+
+        # remove stop words from the text
+        data[column]= data[column].apply(remove_stop_words)
+
+def fill_na_values(data: pd.DataFrame, column_and_fill: list):
+    """
+    Fill the N/A values in the specified columns with the specified values
+    PARAM:
+        data: pd.DataFrame | The data frame we want to edit
+        column_and_fill: list | a list of tuple pairs where the first value is the column name and the second is the value to replace NA with
+    """
+    # Iterate through the specified columns and replace the NA values with the specified values
+    for (column, fill_value) in column_and_fill:
+        data[column]= data[column].fillna(fill_value)
+
+def clean_dataframe(data: pd.DataFrame, columns_to_remove: list[str]):
+    """
+    Clean a dataframe of bad data
+    PARAM:
+        data: pd.DataFrame | The dataframe to clean
+    """
+    # drop unwanted columns
+    data.drop(columns=columns_to_remove, inplace=True)
+
+    # drop invalid rows
+    data.dropna(inplace=True)
+
+    # drop duplicate entries
+    data.drop_duplicates(inplace=True)
+
+
+
+
+        
+
+##############################################################
+########## INDIVIDUAL STRING EDITING FUNCTIONS ################
+################################################################
+
 
 def remove_symbols(text: str) -> str:
     """"
@@ -103,4 +172,3 @@ def preprocess_text(text: str):
     simplified_text= remove_stop_words(normalized_text)
 
     return simplified_text
-
