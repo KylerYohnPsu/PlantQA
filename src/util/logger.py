@@ -4,6 +4,15 @@ import colorlog
 import sys
 from src.config import LOG_LEVEL, LOG_COLORS, LOG_PATTERN
 
+def bold(text: str) -> str:
+	""" format the given text to be bold """
+	return f"\033[1m{text}\033[0m"
+def italic(text: str) -> str:
+	""" format the given text to be italic """
+	return f"\033[3m{text}\033[0m"
+def underline(text: str) -> str:
+    return f"\033[4m{text}\033[0m"
+
 class Logger:
 	"""
 	Class used for logging.
