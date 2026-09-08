@@ -28,7 +28,7 @@ def load_csv(csv_path: str):
     Logger.debug(f"[load_csv] Successfully loaded {csv_path} into dataframe")
     return data
 
-def preprocess_dataframe(data: pd.DataFrame, cols_to_normalize: list[str], cols_to_remove: list[str], na_col_fill_pairs: list[tuple]):
+def preprocess_dataframe(data: pd.DataFrame, cols_to_normalize: list[str], cols_to_remove: list[str], na_col_fill_pairs: dict):
     """
     Grand daddy preprocessing function.
     Just calls other preprocessing functions, that way we only have to call one function to do all the work
@@ -36,7 +36,7 @@ def preprocess_dataframe(data: pd.DataFrame, cols_to_normalize: list[str], cols_
         data: pd.DataFrame | The dataframe to preprocess
         cols_to_normalize: list[str] | The columns of text data to normalize
         cols_to_remove: list[str] | The columns to remove from the dataset
-        na_col_fill_pairs: list[tuple] | (column_name, na_replacement_value) pairs
+        na_col_fill_pairs: dict | (column_name: na_replacement_value) pairs
     """
     fill_na_values(data, na_col_fill_pairs)
     preprocess_text_columns(data, cols_to_normalize)
@@ -60,15 +60,15 @@ def preprocess_text_columns(data: pd.DataFrame, columns: list[str]):
         # remove stop words from the text
         data[column]= data[column].apply(remove_stop_words)
 
-def fill_na_values(data: pd.DataFrame, column_and_fill: list):
+def fill_na_values(data: pd.DataFrame, column_and_fill: dict):
     """
     Fill the N/A values in the specified columns with the specified values
     PARAM:
         data: pd.DataFrame | The data frame we want to edit
-        column_and_fill: list | a list of tuple pairs where the first value is the column name and the second is the value to replace NA with
+        column_and_fill: dict | a dict of pairs where the first value is the column name and the second is the value to replace NA with
     """
     # Iterate through the specified columns and replace the NA values with the specified values
-    for (column, fill_value) in column_and_fill:
+    for column, fill_value in column_and_fill.items():
         data[column]= data[column].fillna(fill_value)
 
 def clean_dataframe(data: pd.DataFrame, columns_to_remove: list[str]):

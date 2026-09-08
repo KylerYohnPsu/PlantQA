@@ -2,8 +2,39 @@ import logging
 import threading
 import colorlog
 import sys
-from src.config import LOG_LEVEL, LOG_COLORS, LOG_PATTERN
+from src.util.config import config #LOG_LEVEL, LOG_COLORS, LOG_PATTERN
 
+def determine_log_level() -> int:
+	level= config.logging.level
+	level= level.strip()
+	level= level.lower()
+	match level:
+		case "debug": return logging.DEBUG
+		case "info": return logging.INFO
+		case "warning": return logging.WARNING
+		case "error": return logging.ERROR
+		case "critical": return logging.CRITICAL
+		case _: raise ValueError(f"Unknown logging level in config.ini: {level}")
+
+def determine_log_colors() -> dict:
+	"""Load logging level colors from the [logging.colors] INI section."""
+	colors_section = config.logging.colors
+
+	colors= {}
+	for key, val in vars(colors_section).items():
+		colors[key.upper()]= val
+
+	if colors == {}:
+		raise ValueError("No logging colors were configured.")
+
+	return colors
+
+# Determine the log level based on the config.ini settings
+LOG_LEVEL= determine_log_level()
+#Determine the logging colors
+LOG_COLORS= determine_log_colors()
+
+# Useful text customization functions
 def bold(text: str) -> str:
 	""" format the given text to be bold """
 	return f"\033[1m{text}\033[0m"
@@ -42,7 +73,7 @@ class Logger:
 			
 			# Format all logs
 			formatter= colorlog.ColoredFormatter(
-				LOG_PATTERN,
+				config.logging.pattern,
 				datefmt="%H:%M:%S",
 				log_colors= LOG_COLORS
 			)
