@@ -15,3 +15,5 @@ nltk
 scikit-learn
 opencv-python
 huggingface_hub
+requests
+selenium
