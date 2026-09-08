@@ -10,6 +10,7 @@ import wordcloud
 from src.util.logger import Logger, bold, italic, underline
 import matplotlib.pyplot as plt
 import nltk
+import src.util.general as general_util
 
 def explore_data(data: pd.DataFrame, col_dist_args: list[tuple], text_cols: list[str], top_n_words: int=20, name: str="Data"): 
     """ Explore a single pandas dataframe """
@@ -24,7 +25,7 @@ def explore_data(data: pd.DataFrame, col_dist_args: list[tuple], text_cols: list
     print(f"\n\n")
 
     head= data.head(1)
-    loggable_head= stringify_dataframe_entry(head)
+    loggable_head= general_util.stringify_dataframe_entry(head)
     Logger.info(f"{name} Head:\n{loggable_head}")
 
     print("\n\n\n\n\n")
@@ -83,21 +84,8 @@ def log_stats(statistics: dict):
         statistics: dict | A nested dict returned from calculate_text_stats
     """
     for col_name, stats in statistics.items():
-        pretty_string= dictionary_pretty_string(stats)
+        pretty_string= general_util.dictionary_pretty_string(stats)
         Logger.info(f"\n{bold(underline(col_name))}:\n{pretty_string}")
-
-def dictionary_pretty_string(d: dict) -> str:
-    """
-    Format a dictionary into a pretty string
-    PARAM:
-        d: dict | The dictionary to format
-    RETURN:
-        str: the pretty string with the dictionary's info in it
-    """
-    string= ""
-    for key, val in d.items():
-        string+= f"\t{bold(key)}: {val}\n"
-    return string
 
 def calculate_text_stats(data: pd.DataFrame, columns: list[str]) -> dict:
     """
@@ -122,7 +110,6 @@ def calculate_text_stats(data: pd.DataFrame, columns: list[str]) -> dict:
         }
         return_dict[col]= col_stats
     return return_dict
-
 
 def make_word_frequency_distributions(data: pd.DataFrame, columns: list[str], top_n_words: int= 20):
     """
@@ -158,22 +145,6 @@ def make_column_distributions(data: pd.DataFrame, col_dist_args: list[tuple]):
         fig_size= args['figure_size']
         show_counts= args['show_counts']
         make_column_distribution_graph(data, col_name, size=fig_size, show_counts=show_counts)
-
-
-def stringify_dataframe_entry(entry: pd.DataFrame) -> str:
-    """
-    Take a single dataframe entry and make it a string that 
-    looks nice when logged
-    PARAM:
-        entry: pd.DataFrame | The frame entry to make pretty
-    RETURN:
-        str: The entry info in a pretty string
-    """
-    pretty_string= ""
-    iterable_entry= entry.iloc[0]
-    for col, val in iterable_entry.items():
-        pretty_string+= f"\t{bold(col)}: {val}\n"
-    return pretty_string
 
 def make_column_distribution_graph(data: pd.DataFrame, column_name: str, show_counts: bool= False, size:tuple[int, int]= (5,5)):
     """
