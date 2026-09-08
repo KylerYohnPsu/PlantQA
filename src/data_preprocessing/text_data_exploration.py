@@ -2,14 +2,16 @@
 Put code for exploring text data here
 """
 
+#####
+#TODO: move the graph functions to their own file, also move generic printing helper functions to their own file
+
 import pandas as pd
 import wordcloud
 from src.util.logger import Logger, bold, italic, underline
 import matplotlib.pyplot as plt
 import nltk
 
-def explore_data(data: pd.DataFrame, col_dist_args: list[dict], wordcloud_cols: list[str],
-                 word_freq_dist_cols: list[str], top_n_words: int=20, name: str="Data"): 
+def explore_data(data: pd.DataFrame, col_dist_args: list[tuple], text_cols: list[str], top_n_words: int=20, name: str="Data"): 
     """ Explore a single pandas dataframe """
     info= data.info()
     Logger.info(f"{name} Info:\n{info}")
@@ -26,17 +28,101 @@ def explore_data(data: pd.DataFrame, col_dist_args: list[dict], wordcloud_cols: 
     Logger.info(f"{name} Head:\n{loggable_head}")
 
     print("\n\n\n\n\n")
-    Logger.info(f"\n\n-------- {name} Class Frequency Distributions --------\n\n")
+    Logger.info(f"\n\n-------- {name} Text Column Statistics --------\n\n")
+    stats= calculate_text_stats(data, text_cols)
+    log_stats(stats)
 
+    print("\n\n\n\n\n")
+    Logger.info(f"\n\n-------- {name} Text Column Box Plots --------\n\n")
+    make_text_column_box_plots(data, text_cols)
+
+    print("\n\n\n\n\n")
+    Logger.info(f"\n\n-------- {name} Class Frequency Distributions --------\n\n")
     make_column_distributions(data, col_dist_args)
 
     print("\n\n\n\n\n")
     Logger.info(f"\n\n-------- {name} WordClouds --------\n\n")
-    make_wordclouds(data, wordcloud_cols)
+    make_wordclouds(data, text_cols)
 
     print("\n\n\n\n\n")
     Logger.info(f"\n\n-------- {name} Word Frequency Distributions --------\n\n")
-    make_word_frequency_distributions(data, word_freq_dist_cols, top_n_words=top_n_words)
+    make_word_frequency_distributions(data, text_cols, top_n_words=top_n_words)
+
+def make_text_column_box_plots(data: pd.DataFrame, columns: list[str]):
+    """
+    Iterate over columns and make a boxplot for the text length stats
+    PARAM:
+        data: pd.DataFrame | The data
+        columns: list[str] | The names of the columns in the data that we want to make boxplots of   
+    """
+    for col in columns:
+        text_col= data[col]
+        lengths= text_col.str.len()
+        pretty_column_name= col.replace("_", " ").title()
+        make_box_plot(lengths, "Character Count", f"Box Plot of {pretty_column_name} Text Lengths")
+
+def make_box_plot(data: any, y: str, title: str="Boxplot"):
+    """
+    Make a boxplot of the given data
+    PARAM:
+        data: any | The data to make a boxplot out of
+        y: str | The y axis label
+        title: str | The title of the graph
+    """
+    plt.boxplot(data)
+    plt.ylabel(y)
+    plt.xlabel("")
+    plt.grid()
+    plt.title(title)
+    plt.show()
+
+def log_stats(statistics: dict):
+    """
+    Log the stats dictionaries in a pretty format
+    PARAM:
+        statistics: dict | A nested dict returned from calculate_text_stats
+    """
+    for col_name, stats in statistics.items():
+        pretty_string= dictionary_pretty_string(stats)
+        Logger.info(f"\n{bold(underline(col_name))}:\n{pretty_string}")
+
+def dictionary_pretty_string(d: dict) -> str:
+    """
+    Format a dictionary into a pretty string
+    PARAM:
+        d: dict | The dictionary to format
+    RETURN:
+        str: the pretty string with the dictionary's info in it
+    """
+    string= ""
+    for key, val in d.items():
+        string+= f"\t{bold(key)}: {val}\n"
+    return string
+
+def calculate_text_stats(data: pd.DataFrame, columns: list[str]) -> dict:
+    """
+    Calculate various statistics for each text column
+    PARAM:
+        data: pd.DataFrame | The data
+        columns: list[str] | The names of the columns in the data that we want to analyze
+    RETURN:
+        dict: a nested dictionary where each key-val pair represents the stats of a column
+    """
+    return_dict= {}
+    for col in columns:
+        text_lengths= data[col].str.len()
+        col_stats= {
+            "mean_len": text_lengths.mean(),
+            "mode_len": text_lengths.mode().tolist(), # can be more than one mode
+            "median_len": text_lengths.median(),
+            "max_len": text_lengths.max(),
+            "min_len": text_lengths.min(),
+            "std_len": text_lengths.std(),
+            "var_len": text_lengths.var(),
+        }
+        return_dict[col]= col_stats
+    return return_dict
+
 
 def make_word_frequency_distributions(data: pd.DataFrame, columns: list[str], top_n_words: int= 20):
     """
