@@ -3,6 +3,7 @@
 
 numpy
 tensorflow
+keras
 matplotlib
 pandas
 colorlog
