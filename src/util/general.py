@@ -1,4 +1,4 @@
-from logger import Logger, bold, italic, underline
+from .logger import Logger, bold, italic, underline
 import pandas as pd
 
 

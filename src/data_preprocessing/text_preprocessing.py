@@ -28,7 +28,7 @@ def load_csv(csv_path: str):
     Logger.debug(f"[load_csv] Successfully loaded {csv_path} into dataframe")
     return data
 
-def preprocess_dataframe(data: pd.DataFrame, cols_to_normalize: list[str], cols_to_remove: list[str], na_col_fill_pairs: dict):
+def preprocess_dataframe(data: pd.DataFrame, cols_to_normalize: list[str], cols_to_remove: list[str], na_col_fill_pairs: dict, cols_to_prepend: list[str], prepend_text: str):
     """
     Grand daddy preprocessing function.
     Just calls other preprocessing functions, that way we only have to call one function to do all the work
@@ -37,10 +37,30 @@ def preprocess_dataframe(data: pd.DataFrame, cols_to_normalize: list[str], cols_
         cols_to_normalize: list[str] | The columns of text data to normalize
         cols_to_remove: list[str] | The columns to remove from the dataset
         na_col_fill_pairs: dict | (column_name: na_replacement_value) pairs
+        cols_to_prepend, list[str] | Names of the columns to prepend text to the values of
+        prepend_text: str | the text to prepend to the specified columns
     """
     fill_na_values(data, na_col_fill_pairs)
     preprocess_text_columns(data, cols_to_normalize)
+    prepend_path_to_vals(data, cols_to_prepend, prepend_text)
     clean_dataframe(data, cols_to_remove)
+
+def prepend_path_to_vals(data: pd.DataFrame, cols_to_prepend: list[str], prepend_text: str):
+    """
+    Prepend the given text to the specified columns
+    PARAM:
+        data: pd.DataFrame | The dataframe to edit
+        cols_to_prepend: list[str] | The names of the columns to prepend text to
+        prepend_text: str | The string to add to the front of the values
+    """
+    for column in cols_to_prepend:
+        data[column]= data[column].apply(prepend_path, args=(prepend_text,))
+
+def prepend_path(post_text: str, pre_text: str):
+    """
+    Prepend a string onto another string
+    """
+    return pre_text / post_text
 
 def preprocess_text_columns(data: pd.DataFrame, columns: list[str]):
     """
