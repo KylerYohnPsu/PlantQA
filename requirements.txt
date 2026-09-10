@@ -5,7 +5,7 @@ numpy
 tensorflow
 keras
 matplotlib
-pandas
+pandas<3
 colorlog
 jupyter
 ipykernel
