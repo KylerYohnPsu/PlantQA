@@ -2,8 +2,10 @@ from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
 import numpy as np
+import tensorflow as tf
 import keras
 from keras import layers
+import src.data_preprocessing.image_preprocessing as img_pre
 
 
 @dataclass
@@ -33,9 +35,36 @@ class VisualModel:
         self.img_size = img_size
         self.weights = weights  # "imagenet" = transfer and None = from custom
         self.model = None
-    def make_dataset(df, classes, batch_size = 32, training = False):
-        # Function to make the dataset for the model compatible
-        raise NotImplementedError()
+
+    @staticmethod
+    def make_dataset(df, classes, raw_root, size=(224, 224),
+                     batch_size=32, training=False):
+        labels = {
+            head: df[head].astype(str)
+            .map(lambda v, c= names : c.index(v) if v in c else len(c) - 1)
+            .to_numpy("int32")
+            for head, names in classes.items()
+        }
+
+        root = str(raw_root).rstrip("/")
+        paths = (root + "/" + df["image_path"].astype(str)).to_numpy()
+
+        def load_image(path, label):
+            def preprocess(p):
+                array = img_pre.preprocess_image(p.decode("utf-8"), size)
+                if array is None:
+                    array = np.zeros((size, 3), np.float32)
+                return array
+
+            img = tf.numpy_function(preprocess, [path], tf.float32)
+            img.set_shape((*size, 3))
+            return img, label
+
+        data_set = tf.data.Dataset.from_tensor_slices((paths, labels))
+        data_set = data_set.map(load_image, num_parallel_calls=tf.data.AUTOTUNE)
+        if training:
+            data_set = data_set.shuffle(1024)
+        return data_set.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
     def build(self):
         base = keras.applications.EfficientNetB0(

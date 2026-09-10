@@ -72,7 +72,7 @@ def preprocess_text_columns(data: pd.DataFrame, columns: list[str]):
     """
     for column in columns:
         # make sure the column is all strings to prevent errors
-        data[column]= data[column].astype(str)
+        data[column]= data[column].fillna("").astype(str)
 
         # remove symbols, normalize whitespace, make lower, etc
         data[column]= data[column].apply(normalize_text)
