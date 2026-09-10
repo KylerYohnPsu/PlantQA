@@ -104,4 +104,8 @@ def preprocess_image(image_path: str, processed_size: tuple=(500,500)):
     Preprocess a single image
     Just a placeholder for now, feel free to edit/remove
     """
-    return
+    image = load_image(image_path)
+    if image is None:
+        return None
+    image = resize_image(image, processed_size)
+    return image.astype(np.float32)
