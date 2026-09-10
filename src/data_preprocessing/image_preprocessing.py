@@ -102,7 +102,6 @@ def resize_image(image: np.ndarray, new_size: tuple[int,int]= (500,500)) -> np.n
 def preprocess_image(image_path: str, processed_size: tuple=(500,500)):
     """
     Preprocess a single image
-    Just a placeholder for now, feel free to edit/remove
     """
     image = load_image(image_path)
     if image is None:
