@@ -23,7 +23,7 @@ def load_image(image_path: str) -> np.ndarray:
     with Image.open(image_path) as img:
         loaded_image = np.asarray(img.convert("RGB"))
 
-    Logger.debug(f"Loaded image: {image_path}")
+    # Logger.debug(f"Loaded image: {image_path}")
 
     return loaded_image
 
