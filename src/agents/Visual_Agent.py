@@ -47,7 +47,9 @@ class VisualModel:
         }
 
         root = str(raw_root).rstrip("/")
-        paths = (root + "/" + df["image_path"].astype(str)).to_numpy()
+        paths = (df["image_path"].map(
+            lambda p: p if p.startswith("/") else f"{root}/{p}"
+        ).astype(str)).to_numpy()
 
         def load_image(path, label):
             def preprocess(p):
