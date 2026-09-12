@@ -3,6 +3,7 @@ from transformers import AutoTokenizer, BatchEncoding
 from src.util.logger import Logger
 import src.util.general as general_util
 import tensorflow as tf
+import numpy as np
 
 class TextTokenizer:
     def __init__(self, tokenizer_model_name: str, max_length: int):
@@ -36,6 +37,55 @@ class TextTokenizer:
 
         return inputs, mask
 
+    def decode(self, ids: tf.Tensor | np.ndarray) -> str:
+        """
+        decode a single tensor into a string
+        PARAM:
+            ids: tf.Tensor | Tensor model outputs
+        RETURN:
+            str: The decoded tensor
+        """
+        if isinstance(ids, tf.Tensor):
+            ids= ids.numpy() # Turn tensor into np array
+        elif isinstance(ids, np.ndarray):
+            pass # nothing to do
+        else:
+            Logger.error(f"[decode] Invalid ids received.  Accepts types (tf.Tensor, np.ndarray).  Got {type(ids)}")
+            return None
+
+        return_string= self._tokenizer.decode(
+            ids,
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=True,
+        )
+
+        return return_string
+
+    def batch_decode(self, ids) -> list[str]:
+        """
+        decode a batch of tensors of (size, length)
+        PARAM:
+            ids: tf.Tensor | The ids to batch decode
+        RETURN:
+            list[str] | None: the decoded strings in a list, or None if error
+        """
+        if isinstance(ids, tf.Tensor):
+            ids= ids.numpy()
+        elif isinstance(ids, np.ndarray):
+            pass
+        else:
+            Logger.error(f"[batch_decode] Invalid ids received.  Accepts types (tf.Tensor, np.ndarray).  Got {type(ids)}")
+            return None
+
+        return_list= self._tokenizer.batch_decode(
+            ids,
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=True,
+        )
+
+        return return_list
+
+        
     def _listify_text(self, text: str | list | pd.DataFrame | pd.Series) -> list[str] | None:
         if isinstance(text, str):
             return [text]
