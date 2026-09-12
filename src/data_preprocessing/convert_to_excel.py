@@ -72,17 +72,21 @@ def extract_USDA_data(path_to_eol_data: str):
 def pull_images(plant_name: str, image_uri: list, image_save_path: str):
     if not os.path.exists(os.path.join(image_save_path, plant_name)):
         os.mkdir(os.path.join(image_save_path, plant_name))
+
     counter = 1
     for i in image_uri:
         ext = os.path.splitext(urlparse(i).path)[1] or ".jpg"
         img_path = image_save_path / plant_name / f'{plant_name}_{counter}{ext}'
-        r = requests.get(i)
-        content_type = r.headers.get('Content-Type', "")
-        if r.status_code == 200 and 'image' in content_type.lower():
-            with open(img_path, "wb") as file:
-                file.write(r.content)
-            counter += 1
-        time.sleep(1 + random.uniform(0,0.5))
+        try:
+            r = requests.get(i)
+            content_type = r.headers.get('Content-Type', "")
+            if r.status_code == 200 and 'image' in content_type.lower():
+                with open(img_path, "wb") as file:
+                    file.write(r.content)
+                counter += 1
+        except requests.exceptions.RequestException as e:
+            print(f'Failed to fetch {i}: {e}')
+        time.sleep(1 + random.uniform(0,2))
 
 
 
@@ -99,14 +103,26 @@ def pull_docs(plant_name: str, plant_uri: list, doc_save_path: str):
              with open(pdf_path, "wb") as file:
                  file.write(r.content)
              counter += 1
-         time.sleep(1 + random.uniform(0,0.5))
+         time.sleep(1 + random.uniform(0,2))
 
 def pull_text_data(plant_name : str, kb_path:str):
     '''
     Retrieve data from the USDA plant site
     '''
-    r = requests.get(f"https://plantsservices.sc.egov.usda.gov/api/PlantProfile?symbol={plant_name}", headers=HEADERS)
-    plant_json = r.json()
+    try:
+        r = requests.get(f"https://plantsservices.sc.egov.usda.gov/api/PlantProfile?symbol={plant_name}", headers=HEADERS)
+    except requests.exceptions.RequestException as e:
+        print(f"Request Failed for {plant_name}: {e}")
+        return None
+
+    if r.status_code != 200 or not r.text.strip():
+        print(f"No valid response for {plant_name} (status {r.status_code})")
+        return None
+    try:
+        plant_json = r.json()
+    except requests.exceptions.JSONDecodeError:
+        print(f"Bad JSON for {plant_name}")
+        return None
     pr = plant_record(plant_json)
     plant_kb_path = kb_path / f'{plant_name}'
     pr.save(plant_kb_path)
@@ -114,7 +130,8 @@ def pull_text_data(plant_name : str, kb_path:str):
     return pr
     #grab as many images as possible associated with the text
  
-
+def get_completed(kb_path: str) -> set[str]:
+    return {p.stem for p in kb_path.iterdir()}
 
 
 if __name__ == '__main__':
@@ -138,9 +155,14 @@ if __name__ == '__main__':
     else:
         plant_df = extract_USDA_data(path_to_eol_data=path_to_eol_data)
     counter = 1
+    completed = get_completed(kb_path)
     for plant in plant_df['symbol'].unique():
+        if plant in completed:
+            continue
         plant_obj = pull_text_data(plant_name=plant, kb_path=kb_path)
 
+        if plant_obj is None:
+            continue
         image_list = plant_df.loc[plant_df['symbol'] == plant, 'accessURI'].to_list()
         plant_guide_list = plant_obj.plant_guide_urls
         fact_sheet_list = plant_obj.fact_sheet_urls
@@ -149,9 +171,5 @@ if __name__ == '__main__':
 
         if plant_obj.Has_documents:
             pull_docs(plant_name=plant, plant_uri=plant_uri_list, doc_save_path=plant_sheet_path)
-        if counter != 10:
-            counter += 1
-        else:
-            break
 
 
