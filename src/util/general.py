@@ -37,3 +37,17 @@ def stringify_dataframe_entry(entry: pd.DataFrame) -> str:
     for col, val in iterable_entry.items():
         pretty_string+= f"\t{bold(col)}: {val}\n"
     return pretty_string
+
+def stringify_list(l: list[any]) -> list[str]:
+    """
+    Convert every item in a list into a string
+    PARAM:
+        l: list[any] | A list of data
+    RETURN:
+        list[str]: The given list where every entry is a str
+    """
+    str_list= []
+    for entry in l:
+        str_entry= str(entry)
+        str_list.append(str_entry)
+    return str_list
