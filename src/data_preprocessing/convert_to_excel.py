@@ -4,6 +4,9 @@ from pathlib import Path
 import requests
 import time
 import tarfile
+from plant_record import plant_record
+import random
+from urllib.parse import urlparse
 """
 If you have not downloaded the USDA plant data, download that first and set up the file structure as follows:
 data/
@@ -13,15 +16,12 @@ From the data set you only need the taxon file for this script to work.
 https://zenodo.org/records/18945687 -- Link to usda images download
 https://zenodo.org/records/20646743 -- link to usda Plants Structured data download
 """
+#global access
+plant_df = None
+HEADERS = {'User-Agent': 'Pennsylvania State University Masters Students in artifical intelligence'}
 ##First Check that data exists in proper location
-def extract_USDA_data():
+def extract_USDA_data(path_to_eol_data: str):
     #Path for EOL data
-    path_to_eol_data = Path(__file__).parent.parent.parent / "data" / "EOI_Data_Pulls" 
-
-    if not os.path.exists(os.path.join(path_to_eol_data, "images")):
-        images_path = path_to_eol_data / "images"
-        os.mkdir(images_path)
-
     assert os.path.exists(os.path.join(path_to_eol_data, "usda_plant_traits.tar.gz")), "usda_plant_traits.tar.gz not found in data/EOI_Data_Pulls. Please download from https://zenodo.org/records/18945687 and place in the correct location."
     assert os.path.exists(os.path.join(path_to_eol_data, "usda_plant_images.tar.gz")), "usda_plant_images.tar.gz not found in data/EOI_Data_Pulls. Please download from https://zenodo.org/records/18945687 and place in the correct location."
 
@@ -67,23 +67,91 @@ def extract_USDA_data():
 
     #save the final df for use later
     final_scrape_df.to_csv(os.path.join(path_to_eol_data, "final_scrape_df.csv"), index=False)
+    return final_scrape_df
 
-def pull_images(plant_name: str, image_uri: list):
-    path_to_eol_images = Path(__file__).parent.parent.parent / "data" / "EOI_Data_Pulls" / "images"
+def pull_images(plant_name: str, image_uri: list, image_save_path: str):
+    if not os.path.exists(os.path.join(image_save_path, plant_name)):
+        os.mkdir(os.path.join(image_save_path, plant_name))
+    counter = 1
+    for i in image_uri:
+        ext = os.path.splitext(urlparse(i).path)[1] or ".jpg"
+        img_path = image_save_path / plant_name / f'{plant_name}_{counter}{ext}'
+        r = requests.get(i)
+        content_type = r.headers.get('Content-Type', "")
+        if r.status_code == 200 and 'image' in content_type.lower():
+            with open(img_path, "wb") as file:
+                file.write(r.content)
+            counter += 1
+        time.sleep(1 + random.uniform(0,0.5))
 
-    #make a new path for the new incoming plant
-    os.mkdir(os.join(path_to_eol_images, plant_name))
 
 
+def pull_docs(plant_name: str, plant_uri: list, doc_save_path: str):
+     if not os.path.exists(os.path.join(doc_save_path, plant_name)):
+            os.mkdir(os.path.join(doc_save_path, plant_name))
+     counter = 1
 
-def pull_docs(plant_name: str, doc_uri: list):
-    pass
+     for i in plant_uri:
+         ext = os.path.splitext(urlparse(i).path)[1] or ".pdf"
+         pdf_path = doc_save_path / plant_name / f'{plant_name}_{counter}{ext}'
+         r = requests.get(f'https://plants.sc.egov.usda.gov/{i}')
+         if r.status_code == 200:
+             with open(pdf_path, "wb") as file:
+                 file.write(r.content)
+             counter += 1
+         time.sleep(1 + random.uniform(0,0.5))
 
-def pull_text_data(plant_name: str):
-    
+def pull_text_data(plant_name : str, kb_path:str):
+    '''
+    Retrieve data from the USDA plant site
+    '''
+    r = requests.get(f"https://plantsservices.sc.egov.usda.gov/api/PlantProfile?symbol={plant_name}", headers=HEADERS)
+    plant_json = r.json()
+    pr = plant_record(plant_json)
+    plant_kb_path = kb_path / f'{plant_name}'
+    pr.save(plant_kb_path)
+    time.sleep(1 + random.uniform(0,0.5))
+    return pr
+    #grab as many images as possible associated with the text
+ 
+
+
 
 if __name__ == '__main__':
-    extract_USDA_data()
-    pull_images()
+    path_to_eol_data = Path(__file__).parent.parent.parent / "data" / "EOI_Data_Pulls" 
+    images_path = path_to_eol_data / "images"
+    kb_path = path_to_eol_data/'KB'
+    plant_sheet_path = path_to_eol_data/'plant_sheets'
+    final_struct_df = Path(__file__).parent.parent.parent / "data" / "EOI_Data_Pulls" / "final_scrape_df.csv"
+    
+    if not os.path.exists(images_path):
+        os.mkdir(images_path)
+
+    if not os.path.exists(kb_path):
+        os.mkdir(kb_path)
+
+    if not os.path.exists(plant_sheet_path):
+        os.mkdir(plant_sheet_path)
+
+    if os.path.exists(final_struct_df):
+        plant_df = pd.read_csv(final_struct_df)
+    else:
+        plant_df = extract_USDA_data(path_to_eol_data=path_to_eol_data)
+    counter = 1
+    for plant in plant_df['symbol'].unique():
+        plant_obj = pull_text_data(plant_name=plant, kb_path=kb_path)
+
+        image_list = plant_df.loc[plant_df['symbol'] == plant, 'accessURI'].to_list()
+        plant_guide_list = plant_obj.plant_guide_urls
+        fact_sheet_list = plant_obj.fact_sheet_urls
+        plant_uri_list = plant_guide_list + fact_sheet_list
+        pull_images(plant_name=plant, image_uri=image_list, image_save_path=images_path)   
+
+        if plant_obj.Has_documents:
+            pull_docs(plant_name=plant, plant_uri=plant_uri_list, doc_save_path=plant_sheet_path)
+        if counter != 10:
+            counter += 1
+        else:
+            break
 
 
