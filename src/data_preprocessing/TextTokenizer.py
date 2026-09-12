@@ -1,7 +1,8 @@
 import pandas as pd
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, BatchEncoding
 from src.util.logger import Logger
 import src.util.general as general_util
+import tensorflow as tf
 
 class TextTokenizer:
     def __init__(self, tokenizer_model_name: str, max_length: int):
@@ -11,28 +12,16 @@ class TextTokenizer:
         self._tokenizer= AutoTokenizer.from_pretrained(self._modelName)
 
 
-    def encode_text(self, text: str | list | pd.DataFrame, encoding_type: str="np") -> str | None:
+    def encode_text(self, text: str | list | pd.DataFrame | pd.Series) -> str | None:
         """
         tokenize the given text data
         PARAM:
             text: str, list, pd.DataFrame | The text data (single string, list of data, or single pd.DataFrame col) to tokenize
-            encoding_type: str | The encoding type
         RETURN:
             | None: None if invalid data
         """
-        # To tokenize the data, it needs to be a list of strings
-        # convert whatever was given into a list of strings
-        if isinstance(text, str):
-            texts= [text]
-        elif isinstance(text, list):
-            texts= general_util.stringify_list(text)
-        elif isinstance(text, pd.DataFrame):
-            # convert the dataframe into a list of strings
-            texts= self._convert_dataframe_to_str_list(text)
-            if texts is None:
-                return None # invalid data give
-        else:
-            Logger.error(f"[encode_text] Invalid type received.  Accepted types are (str, list, pd.DataFrame).  Got {type(text)}")
+        texts= self._listify_text(text)
+        if texts is None:
             return None
 
         tokenized_texts= self._tokenizer(
@@ -40,12 +29,50 @@ class TextTokenizer:
             padding= True,
             truncation= True,
             max_length= self._maxLength,
-            return_tensors= encoding_type,
+            return_tensors= "np",
         )
 
-        return tokenized_texts
+        inputs, mask= self._convert_encoding_to_tf_tensors(tokenized_texts)
+
+        return inputs, mask
+
+    def _listify_text(self, text: str | list | pd.DataFrame | pd.Series) -> list[str] | None:
+        if isinstance(text, str):
+            return [text]
+        elif isinstance(text, list):
+            return general_util.stringify_list(text)
+        elif isinstance(text, pd.Series):
+            return self._convert_series_to_str_list(text)
+        elif isinstance(text, pd.DataFrame):
+            # convert the dataframe into a list of strings
+            return self._convert_dataframe_to_str_list(text)
+        else:
+            Logger.error(f"[encode_text] Invalid type received.  Accepted types are (str, list, pd.DataFrame, pd.Series).  Got {type(text)}")
+            return None
+
+    def _convert_series_to_str_list(self, data: pd.Series) -> list[str]:
+        """
+        Convert the given series into a list of strings
+        PARAM:
+            data: pd.series | The series to convert
+        RETURN:
+            list[str] | None: The series as a list of strings, None if failure
+        """
+        no_na= data.fillna("")
+        str_no_na= no_na.astype(str)
+        str_list= str_no_na.tolist()
+        return str_list
+
+    def _convert_encoding_to_tf_tensors(self, encoding: BatchEncoding):
+        input_ids= encoding["input_ids"]
+        attention_mask= encoding["attention_mask"]
+
+        tf_inputs= tf.convert_to_tensor(input_ids)
+        tf_attention= tf.convert_to_tensor(attention_mask)
+
+        return (tf_inputs, tf_attention)
         
-    def _convert_dataframe_to_str_list(data: pd.DataFrame) -> list[str] | None:
+    def _convert_dataframe_to_str_list(self, data: pd.DataFrame) -> list[str] | None:
         """
         Convert the given dataframe into a list of strings
         PARAM:
