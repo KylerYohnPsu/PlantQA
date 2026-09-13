@@ -6,8 +6,26 @@ import pathlib
 
 # build the set of stopwords we will use to remove stop words from text
 # Do that here, so we don't have to build it each time we call the stop word function
-STOP_WORDS = set(nltk.corpus.stopwords.words("english"))
+#STOP_WORDS = set(nltk.corpus.stopwords.words("english"))
 
+
+# Custom built stop words list
+# nltk's stop words are too extreme and remove words like
+# "what" and "why" that help determine questions
+STOP_WORDS= [
+    "a", "an", "the",
+    "is", "are", "was", "were",
+    "be", "been", "being", "am",
+    "i", "me", "we", "our", "you",
+    "your", "please", "they", "their",
+    "my", "very", "this", "that", "there",
+    "those", "and", "or", "but",
+    "to", "of", "in", "on", "at", "for",
+    "from", "with", "can", "could", "would",
+    "should", "will", "shall", "may",
+    "might", "has", "have", "had",
+    "any", "if",
+]
 
 def load_csv(csv_path: str):
     """
