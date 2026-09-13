@@ -17,7 +17,7 @@ def test_remove_symbols():
     result_4= text_pre.remove_symbols(test_4)
 
     assert result_1 == "Personally I love  cats"
-    assert result_2 == " a38    444"
+    assert result_2 == "  a38    444"
     assert result_3 == ""
     assert result_4 == " "
 
@@ -40,3 +40,7 @@ def test_normalize_whitespace():
     assert result_4 == ""
     assert result_5 == "Hello there ! How are you doing?"
 
+def test_remove_symbols_spaces_hyphens():
+    assert text_pre.remove_symbols("active 1-2 weeks") == "active 1 2 weeks"
+    assert text_pre.remove_symbols("water-soaked spots") == "water soaked spots"
+    assert text_pre.normalize_text("treated 5-7 days ago") == "treated 5 7 days ago"

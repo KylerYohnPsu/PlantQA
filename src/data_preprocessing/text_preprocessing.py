@@ -137,6 +137,8 @@ def remove_symbols(text: str) -> str:
     RETURN:
         str: The text without symbols
     """
+    text= re.sub(r'[-/]', ' ', text)
+
     regex= r'[^\w\s]'
     no_symbols= re.sub(regex, '', text)
     return no_symbols
