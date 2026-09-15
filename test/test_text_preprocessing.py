@@ -4,6 +4,50 @@ Testing file that checks that text preprocessing code works
 
 import pytest
 import src.data_preprocessing.text_preprocessing as text_pre
+import pandas as pd
+@pytest.fixture
+def qa_dataset():
+    data= pd.DataFrame(
+        {
+            "question": [
+                "What is the plant in this image?",
+                "Is this plant sick?",
+                "Does this tomato look healthy",
+                None, #empty value
+            ],
+            "answer": [
+                "It is a cucumber!",
+                "No",
+                "Yes, it is red and round.",
+                None,
+            ],
+            "path": [
+                "tmp.png", "tmp.png", "tmp.png", "tmp.png",
+            ],
+            "remove": [
+                None, None, None, None,
+            ],
+        }
+    )
+    return data
+
+def test_preprocesses_dataframe(qa_dataset):
+    text_pre.preprocess_dataframe(
+        qa_dataset,
+        ["question", "answer"],
+        ["remove"],
+        {"question": "bababooey", "answer": "I fight cars"},
+        ["path"],
+        "test",
+    )
+
+    assert "remove" not in qa_dataset
+    assert qa_dataset["question"].iloc()[-1] == "bababooey"
+    assert qa_dataset["answer"].iloc()[-1] == "fight cars"
+    assert qa_dataset["path"].iloc()[0] == "test/tmp.png"
+    assert len(qa_dataset["question"]) == 4
+    assert qa_dataset["answer"].iloc()[0] == "cucumber"
+
 
 def test_remove_symbols():
     test_1= "Personally, I love  cats!"

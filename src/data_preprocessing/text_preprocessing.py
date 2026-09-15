@@ -3,6 +3,7 @@ import re
 import nltk
 import pandas as pd
 import pathlib
+import os
 
 # build the set of stopwords we will use to remove stop words from text
 # Do that here, so we don't have to build it each time we call the stop word function
@@ -60,7 +61,7 @@ def prepend_path(post_text: str, pre_text: str):
     """
     Prepend a string onto another string
     """
-    return pre_text / post_text
+    return os.path.join(pre_text, post_text)
 
 def preprocess_text_columns(data: pd.DataFrame, columns: list[str]):
     """
