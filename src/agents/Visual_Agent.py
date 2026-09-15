@@ -47,13 +47,15 @@ class VisualModel:
         }
 
         root = str(raw_root).rstrip("/")
-        paths = (root + "/" + df["image_path"].astype(str)).to_numpy()
+        paths = df["image_path"].astype(str).map(
+            lambda p: p if p.startswith("/") else f"{root}/{p}"
+        ).to_numpy()
 
         def load_image(path, label):
             def preprocess(p):
                 array = img_pre.preprocess_image(p.decode("utf-8"), size)
                 if array is None:
-                    array = np.zeros((size, 3), np.float32)
+                    array = np.zeros((*size, 3), np.float32)
                 return array
 
             img = tf.numpy_function(preprocess, [path], tf.float32)
