@@ -17,3 +17,9 @@ scikit-learn
 opencv-python
 huggingface_hub
 transformers
+selenium
+pyarrow
+fastparquet
+pypdf
+pymupdf
+sentence-transformers

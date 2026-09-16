@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from PIL import Image
 import io
+#from util.logger import Logger
 
 
 # grab path to data folder
@@ -20,16 +21,19 @@ if not os.path.exists(path_to_images):
 if not os.path.exists(path_to_csv):
     os.makedirs(path_to_csv)
 for file in os.listdir(path_to_data):
+    
     file_name = file.split(".")[0]
+    print(f"Parsing: {file_name}")
     #read the parquet file into a data frame
     df = pd.read_parquet(path_to_data / file)
 
     for index, row in df.iterrows():
+        print(f"{index}")
         image = Image.open(io.BytesIO(row['image']['bytes']))
         image.save(path_to_images / f"{file_name}_{index}.png")
         df.at[index, 'image'] = f"{file_name}_{index}.png"
 
 
-    
+    print(f"Saving: {path_to_csv}/{file_name}")
     df.to_csv(path_to_csv / f"{file_name}.csv", index=False) 
 

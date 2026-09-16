@@ -4,6 +4,7 @@ import nltk
 import pandas as pd
 import pathlib
 import os
+import fitz
 
 # build the set of stopwords we will use to remove stop words from text
 # Do that here, so we don't have to build it each time we call the stop word function
@@ -46,6 +47,30 @@ def load_csv(csv_path: str):
     data= pd.read_csv(csv_path)
     Logger.debug(f"[load_csv] Successfully loaded {csv_path} into dataframe")
     return data
+
+def load_pdf_text_data(pdf_path: str) -> str:
+    """
+    Load a pdf file as a big text string
+    PARAM:
+        pdf_path: str | the path to the pdf
+    RETURN:
+        str: THe pdf data as a string
+    """
+    path= pathlib.Path(pdf_path)
+    if not path.is_file():
+        Logger.error(f"[load_csv] Unable to open {pdf_path}.")
+        return None
+    
+    pdf= fitz.open(pdf_path)
+
+    text= ""
+    for page in pdf:
+        blocks= page.get_text("blocks")
+        for block in blocks:
+            block_text= normalize_whitespace(block[4])
+            text+= block_text
+        
+    return text
 
 def preprocess_dataframe(data: pd.DataFrame, cols_to_normalize: list[str], cols_to_remove: list[str], na_col_fill_pairs: dict, cols_to_prepend: list[str], prepend_text: str):
     """
@@ -209,3 +234,17 @@ def preprocess_text(text: str):
     simplified_text= remove_stop_words(normalized_text)
 
     return simplified_text
+
+def replace_urls(text: str, replace: str) -> str:
+    """
+    replace any urls in the given text with the specified replacement value
+    PARAM:
+        text: str | The text we are updating
+        replace: str | The string to replace any urls with
+    RETURN:
+        str: The given text with the urls replaced
+    """
+    url_pattern= r'https?://\S+|www\.\S+'
+    replaced_text= re.sub(url_pattern, replace, text)
+    return replaced_text
+
