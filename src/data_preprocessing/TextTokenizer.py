@@ -8,86 +8,11 @@ import re
 from . import text_preprocessing as text_pre
 
 class TextTokenizer:
-    def __init__(self, tokenizer_model_name: str, max_length: int):
+    def __init__(self, tokenizer_model_name: str,  max_length: int):
         self._modelName= tokenizer_model_name
         self._maxLength= max_length
 
         self._tokenizer= AutoTokenizer.from_pretrained(self._modelName)
-
-    
-    def split_text_by_sentence(self, text:str):
-        sentences = re.split(r'(?<=[.!?])\s+', text)
-
-        clean_sentences = []
-
-        for sentence in sentences:
-            sentence = sentence.strip()
-
-            if sentence:
-                clean_sentences.append(sentence)
-
-        return clean_sentences
-    
-    def split_text_by_word(self, text: str):
-        words= text.split()
-        clean_words= []
-
-        for word in words:
-            word= word.strip()
-            if word:
-                clean_words.append(word)
-        
-        return clean_words
-
-    def count_tokens(self, text: str) -> int:
-        tokens= self._tokenizer.encode(text, add_special_tokens=False,)
-        num_tokens= len(tokens)
-        return num_tokens
-    
-    def split_text(self, text: str, method: str):
-        match method.lower():
-            case "sentence":
-                return self.split_text_by_sentence(text)
-            case "word":
-                return self.split_text_by_word(text)
-            case _:
-                Logger.error(f"Unable to split text. Invalid method requested: {method}")
-                return None
-
-
-    def chunk_text(self, text: str, split_method: str) -> list[str]:
-
-        text= self.split_text(text, split_method)
-        if text is None:
-            return None
-
-        chunks= []
-        current_chunk= []
-        chunk_total_tokens= 0
-
-        for sub_text in text:
-            sub_text_tokens= self.count_tokens(sub_text)
-
-            size_limit_reached= current_chunk != [] and chunk_total_tokens + sub_text_tokens > self._maxLength
-
-            if size_limit_reached:
-
-                chunk= " ".join(current_chunk)
-                chunks.append(chunk)
-                current_chunk= []
-                chunk_total_tokens= 0
-
-            current_chunk.append(sub_text)
-            chunk_total_tokens+= sub_text_tokens
-
-        # add any left over text
-        if current_chunk:
-            chunk= " ".join(current_chunk)
-            chunks.append(chunk)
-        
-        return chunks
-
-
 
 
     def encode_text(self, text: str | list | pd.DataFrame | pd.Series) -> str | None:

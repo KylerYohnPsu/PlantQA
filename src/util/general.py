@@ -1,7 +1,31 @@
 
 from src.util.logger import Logger, bold, italic, underline
 import pandas as pd
+import re
 
+def split_text_by_sentence(text:str):
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+
+    clean_sentences = []
+
+    for sentence in sentences:
+        sentence = sentence.strip()
+
+        if sentence:
+            clean_sentences.append(sentence)
+
+    return clean_sentences
+
+def split_text_by_word(text: str):
+    words= text.split()
+    clean_words= []
+
+    for word in words:
+        word= word.strip()
+        if word:
+            clean_words.append(word)
+    
+    return clean_words
 
 def parse_list_from_string(string: str) -> list[str]:
     substrings= string.split(",")

@@ -63,13 +63,14 @@ def load_pdf_text_data(pdf_path: str) -> str:
     
     pdf= fitz.open(pdf_path)
 
-    text= ""
+    all_blocks= []
     for page in pdf:
         blocks= page.get_text("blocks")
         for block in blocks:
             block_text= normalize_whitespace(block[4])
-            text+= block_text
+            all_blocks.append(block_text)
         
+    text= " ".join(all_blocks)
     return text
 
 def preprocess_dataframe(data: pd.DataFrame, cols_to_normalize: list[str], cols_to_remove: list[str], na_col_fill_pairs: dict, cols_to_prepend: list[str], prepend_text: str):
