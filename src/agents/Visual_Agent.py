@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
-
+from pathlib import Path
 import numpy as np
+import json
 import tensorflow as tf
 import keras
 from keras import layers
@@ -17,11 +18,10 @@ class VisualPrediction:
 
 
     def species_filter(self, min_confidence: float = 0.60):
-        if self.top_k[0][0] >= min_confidence:
+        if self.conf_interval >= min_confidence:
             return [(self.plant_species, self.conf_interval)]
-        else:
-            return self.top_k
-    def keywords(self, threshold: float = 0.50) -> List[str]:
+        return self.top_k
+    def keywords(self, threshold: float = 0.50) -> Dict[str, List[str]]:
         return {
             head: [name for name, conf in preds if conf >= threshold]
                  for head, preds in self.heads.items()
@@ -122,6 +122,20 @@ class VisualModel:
 
     def save(self, path):
         self.model.save(path)
+
+    @classmethod
+    def load(cls, model_path, classes_path=None, img_size=(224, 224)) -> "VisualModel":
+        classes_path = Path(classes_path) if classes_path else cls.classes_path_for(model_path)
+        classes = json.loads(Path(classes_path).read_text())
+
+        vm = cls(classes=classes, img_size=img_size)
+        vm.model = keras.models.load_model(model_path)
+
+        for head, names in classes.items():
+            n_out = vm.model.get_layer(head).output.shape[-1]
+            if n_out != len(names):
+                raise ValueError(f"head '{head}': model has {n_out} outputs but {len(names)} class names")
+        return vm
 
 
 if __name__ == "__main__":
