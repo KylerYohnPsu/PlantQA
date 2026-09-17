@@ -29,7 +29,8 @@ class TextAnswer:
 
 
 class AnswerRanker:
-    def __init__(self, vocab_size=30522, dim=256, temperature=0.05):
+    def __init__(self, embedder, vocab_size=30522, dim=256, temperature=0.05):
+        self.embedder = embedder
         self.vocab_size = vocab_size
         self.dim = dim
         self.temperature = temperature
@@ -38,8 +39,9 @@ class AnswerRanker:
 
     @staticmethod
     def build_query(question, visual_prediction):
-        facts = " ".join(preds[0][0] for preds in visual_prediction.heads.values())
-        return f"{question} [SEP] {facts}"
+        h = visual_prediction.heads
+        return (f"{question} Crop: {h['crop'][0][0]}. Disease: {h['disease'][0][0]}. "
+            + f"Severity: {h['severity'][0][0]}.")
 
     @staticmethod
     def candidate_pools(data, max_per_pool=64):
@@ -102,21 +104,21 @@ class AnswerRanker:
         return self.model.fit(train_ds, validation_data=val_ds,
                               epochs=epochs, callbacks=calls)
 
-    def predict(self, question, visual_prediction, candidates, tokenizer, k=3):
+    def predict(self, question, visual_prediction, candidates, k=3):
         if not candidates:
             Logger.error("[predict] No candidate answers to rank")
             return None
 
-        scored = [c[0] for c in candidates]
         shown = [c[1] for c in candidates]
 
-        query_ids, _ = tokenizer.encode_text(self.build_query(question, visual_prediction))
-        answer_ids, _ = tokenizer.encode_text(scored)
+        query_vec = self.embedder.encode(self.build_query(question, visual_prediction))
+        answer_vecs = self.embedder.encode(shown)
 
-        query_vec = self.encoder.predict(query_ids, verbose=0)
-        answer_vecs = self.encoder.predict(answer_ids, verbose=0)
+        # normalize so the dot product is cosine similarity
+        query_vec = query_vec / np.linalg.norm(query_vec)
+        answer_vecs = answer_vecs / np.linalg.norm(answer_vecs, axis=1, keepdims=True)
 
-        scores = (answer_vecs @ query_vec.T).ravel()
+        scores = answer_vecs @ query_vec
         top = np.argsort(scores)[::-1][:k]
         ranked = [(shown[i], float(scores[i])) for i in top]
 
@@ -139,7 +141,7 @@ def recall_at_1(y_true, y_pred):
 
 if __name__ == "__main__":
     import pandas as pd
-    from src.data_preprocessing.TextTokenizer import TextTokenizer
+    from src.data_preprocessing.TextEmbedder import TextEmbedder
     from src.agents.Visual_Agent import VisualPrediction
 
     #Some random training utterances
@@ -172,16 +174,7 @@ if __name__ == "__main__":
         "Lesions will coalesce, causing vine dieback and fruit rot within 2-3 weeks.",
     ] * 8
 
-    #using distilbert as an example
-    tokenizer = TextTokenizer("distilbert-base-uncased", 64)
-
-    ranker = AnswerRanker()
-    ranker.build()
-    ranker.compile()
-    ranker.model.summary()
-
-    train_ds = AnswerRanker.make_dataset(frame, tokenizer, batch_size=16, training=True)
-    ranker.model.fit(train_ds, epochs=3, verbose=1)
+    ranker = AnswerRanker(TextEmbedder("sentence-transformers/all-MiniLM-L6-v2"))
 
     heads = {
         "crop":     [("bottle gourd", 0.91)],
@@ -195,7 +188,7 @@ if __name__ == "__main__":
     candidates = pools[("Specific Disease Identification", "bottle gourd",
                         "gourd anthracnose", "SEVERE")]
 
-    result = ranker.predict("what disease shown here", visual, candidates, tokenizer)
+    result = ranker.predict("what disease shown here", visual, candidates)
 
     print("\nanswer: ", result.answer)
     print("confidence: ", round(result.confidence, 3))
