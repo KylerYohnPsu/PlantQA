@@ -3,9 +3,17 @@ from sentence_transformers import SentenceTransformer
 import src.util.general as general_utils
 from src.util.logger import Logger
 from dataclasses import dataclass
+from pathlib import Path
+from . import text_preprocessing as text_pre
+import json
 
 @dataclass
 class EmbeddingRecord:
+    """
+    A single record that contains the raw text data,
+    the vector embedding, and the metadata for an
+    encoded chunk
+    """
     text: str
     embedding: np.ndarray
     metadata: dict
@@ -26,18 +34,28 @@ class EmbeddingRecord:
         )
 
 class TextEmbedder:
+    """
+    Chunks and embeds text data
+    """
     def __init__(self, model_name):
         self._modelName= model_name
         self._embedder= SentenceTransformer(model_name)
 
     ######## PRIMARY FUNCTIONS #########
 
-    def encode(self, text: str | list[str]) -> np.ndarray:
+    def encode(self, text: str | list[str]):
+        """
+        Create the embedded vector out of the text data (either single string, or list of strings)
+        """
         embeddings= self._embedder.encode(text, convert_to_numpy=True)
         return embeddings
     
-    def chunk(self, text: str, split_method: str, max_size: int, overlap_amount: int) -> list[str]:
-
+    def chunk(self, text: str, split_method: str, max_size: 
+        int, overlap_amount: int) -> list[str]:
+        """
+        Break the given text data into a list of strings of a specified token size
+        """
+        # split the text string into a list of strings
         text= self.split_text(text, split_method)
         if text is None:
             return None
@@ -46,9 +64,12 @@ class TextEmbedder:
         current_chunk= []
         chunk_total_tokens= 0
 
+        # iterate through every string in the split text
         for sub_text in text:
+            # Determine how many tokens are in the string
             sub_text_tokens= self.count_tokens(sub_text)
 
+            # determine if adding this substring to the chunk will exceed the size limit
             size_limit_reached= self.size_limit_reached(
                 current_chunk,
                 sub_text_tokens, 
@@ -56,11 +77,15 @@ class TextEmbedder:
                 max_size
             )
 
+            # if the chunk has reached the size limit, finish it off and store it for returning later
             if size_limit_reached:
 
+                # We want a little bit of overlap between each chunk
+                # This helps limit any info being cutoff between chunks
                 overlap_chunk= []
                 overlap_tokens= 0
 
+                # look at the back of the chunk and get the last <overlap_amount> tokens
                 reversed_chunk= reversed(current_chunk)
                 for previous_text in reversed_chunk:
                     previous_tokens= self.count_tokens(previous_text)
@@ -71,20 +96,24 @@ class TextEmbedder:
                     overlap_chunk.insert(0, previous_text)
                     overlap_tokens+= previous_tokens
 
+                # put the current chunk we have been working on into the return list
                 self.add_to_chunks(chunks, current_chunk)
+
+                # Start the next chunk with the little bit of overlap we just built
                 current_chunk= overlap_chunk
                 chunk_total_tokens= overlap_tokens
 
+            # Put the text we are looking at into the chunk
             current_chunk.append(sub_text)
             chunk_total_tokens+= sub_text_tokens
 
-        # add any left over text
+        # add any left over chunks
         if current_chunk:
             self.add_to_chunks(chunks, current_chunk)
         
         return chunks
     
-    def chunk_and_encode(self, text: str, chunk_method: str, chunk_size: int, overlap_amount: int):
+    def chunk_and_encode(self, text: str, chunk_method: str, chunk_size: int, overlap_amount: int, metadata={}):
         """
         Chunk and encode the string data
         """
@@ -94,7 +123,7 @@ class TextEmbedder:
         # embed the chunks into vectors
         embeddings= self.encode(chunks)
 
-        records= self.make_records(chunks, embeddings)
+        records= self.make_records(chunks, embeddings, metadata)
 
         return records
 
@@ -103,14 +132,14 @@ class TextEmbedder:
 
     ################# HELPER FUNCTIONS ######################
 
-    def make_records(self, chunks: list[str], embeddings):
+    def make_records(self, chunks: list[str], embeddings, metadata= {}):
         if len(chunks) != len(embeddings):
             Logger.error(f"Unable to make embedding records. len(chunks) {len(chunks)} != len(embeddings) {len(embeddings)}")
             return None
         
         records= []
         for chunk, embedding in zip(chunks, embeddings):
-            record= EmbeddingRecord(chunk, embedding, {})
+            record= EmbeddingRecord(chunk, embedding, metadata)
             records.append(record)
         
         return records
