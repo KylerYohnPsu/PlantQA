@@ -4,7 +4,8 @@ import nltk
 import pandas as pd
 import pathlib
 import os
-import fitz
+import pymupdf as fitz
+from docx import Document
 
 # build the set of stopwords we will use to remove stop words from text
 # Do that here, so we don't have to build it each time we call the stop word function
@@ -71,6 +72,17 @@ def load_pdf_text_data(pdf_path: str) -> str:
             all_blocks.append(block_text)
         
     text= " ".join(all_blocks)
+    return text
+
+def load_docx_text_data(doc_path: str) -> str:
+    document= Document(doc_path)
+
+    all_text= []
+    for paragraph in document.paragraphs:
+        paragraph= normalize_whitespace(paragraph.text)
+        all_text.append(paragraph)
+    
+    text= " ".join(all_text)
     return text
 
 def preprocess_dataframe(data: pd.DataFrame, cols_to_normalize: list[str], cols_to_remove: list[str], na_col_fill_pairs: dict, cols_to_prepend: list[str], prepend_text: str):

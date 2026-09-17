@@ -2,6 +2,25 @@
 from src.util.logger import Logger, bold, italic, underline
 import pandas as pd
 import re
+from pathlib import Path
+
+def is_pdf(file: Path):
+    if not isinstance(file, Path):
+        raise TypeError("Only accepts Path objects")
+    
+    if file.is_file() and file.suffix.lower() == ".pdf":
+        return True
+    else:
+        return False
+    
+def is_docx(file: Path):
+    if not isinstance(file, Path):
+        raise TypeError("Only accepts Path objects")
+    
+    if file.is_file() and file.suffix.lower() == ".docx":
+        return True
+    else:
+        return False
 
 def split_text_by_sentence(text:str):
     sentences = re.split(r'(?<=[.!?])\s+', text)

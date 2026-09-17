@@ -23,3 +23,4 @@ fastparquet
 pypdf
 pymupdf
 sentence-transformers
+python-docx
