@@ -61,6 +61,49 @@ def plot_confusion_matrix(predictions: dict, classes: dict, head: str):
     plt.show()
 
 
+def history_frame(*histories) -> pd.DataFrame:
+    frames = [pd.DataFrame(h.history if hasattr(h, "history") else h) for h in histories]
+    frame = pd.concat(frames, ignore_index=True)
+    frame.index = frame.index + 1
+    return frame
+
+
+def plot_loss(*histories, heads=None):
+    frame = history_frame(*histories)
+    names = [f"{h}_loss" for h in heads] if heads else ["loss"]
+
+    plt.figure(figsize=(8, 5))
+    for name in names:
+        line, = plt.plot(frame.index, frame[name], label=f"train {name}")
+        if f"val_{name}" in frame:
+            plt.plot(frame.index, frame[f"val_{name}"], "--", color=line.get_color(), label=f"val {name}")
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    plt.title("Training vs validation loss")
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_accuracy(*histories, heads=None):
+    frame = history_frame(*histories)
+    heads = heads or [c[:-len("_accuracy")] for c in frame if c.endswith("_accuracy") and not c.startswith("val_")]
+
+    plt.figure(figsize=(8, 5))
+    for head in heads:
+        line, = plt.plot(frame.index, frame[f"{head}_accuracy"], label=f"train {head}")
+        if f"val_{head}_accuracy" in frame:
+            plt.plot(frame.index, frame[f"val_{head}_accuracy"], "--", color=line.get_color(), label=f"val {head}")
+    plt.xlabel("epoch")
+    plt.ylabel("accuracy")
+    plt.title("Training vs validation accuracy")
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
+
 def evaluate(vm: VisualModel, df: pd.DataFrame, images_root, name: str = "Test",
              k: int = 3, max_matrix_classes: int = 15):
     Logger.info(f"\n\n-------- {name}: evaluating {len(df)} images --------\n\n")
