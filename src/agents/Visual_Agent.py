@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Tuple
 from pathlib import Path
 import numpy as np
+import pandas as pd
 import json
 import tensorflow as tf
 import keras
@@ -37,14 +38,45 @@ class VisualModel:
         self.model = None
 
     @staticmethod
+    def unknown_label(values):
+        return next((v for v in values if str(v).lower() == "unknown"), "unknown")
+
+    @staticmethod
+    def one_row_per_image(df, heads):
+        images = pd.DataFrame({"image_path": df["image_path"].unique()})
+        for head in heads:
+            values = df[head].astype(str)
+            known = df[values.str.lower() != "unknown"]
+            top = (known.groupby(["image_path", head]).size()
+                   .sort_values(ascending=False).reset_index()
+                   .drop_duplicates("image_path").set_index("image_path")[head])
+            images[head] = images["image_path"].map(top).fillna(VisualModel.unknown_label(values.unique()))
+
+        if "disease" in images:
+            healthy = images["disease"] == "healthy"
+            if "category" in images:
+                images.loc[healthy, "category"] = "healthy"
+            if "severity" in images:
+                images.loc[healthy, "severity"] = "HEALTHY"
+        return images
+
+    @staticmethod
+    def build_classes(df, heads):
+        classes = {}
+        for head in heads:
+            names = sorted(df[head].astype(str).unique())
+            unknown = VisualModel.unknown_label(names)
+            classes[head] = [n for n in names if n != unknown] + [unknown]
+        return classes
+
+    @staticmethod
     def make_dataset(df, classes, raw_root, size=(224, 224),
                      batch_size=32, training=False):
-        labels = {
-            head: df[head].astype(str)
-            .map(lambda v, c= names : c.index(v) if v in c else len(c) - 1)
-            .to_numpy("int32")
-            for head, names in classes.items()
-        }
+        labels = {}
+        for head, names in classes.items():
+            index = {name: i for i, name in enumerate(names)}
+            unknown = index.get(VisualModel.unknown_label(names), len(names) - 1)
+            labels[head] = df[head].astype(str).map(lambda v: index.get(v, unknown)).to_numpy("int32")
 
         root = str(raw_root).rstrip("/")
         paths = df["image_path"].astype(str).map(
@@ -119,6 +151,16 @@ class VisualModel:
             top_k = out["crop"],
             heads = out
         )
+
+    def unfreeze(self, n_layers=30, lr=1e-5):
+        base = next(layer for layer in self.model.layers if isinstance(layer, keras.Model))
+        base.trainable = True
+        for layer in base.layers[:-n_layers]:
+            layer.trainable = False
+        for layer in base.layers:
+            if isinstance(layer, layers.BatchNormalization):
+                layer.trainable = False
+        self.compile(lr=lr)
 
     def save(self, path):
         self.model.save(path)
