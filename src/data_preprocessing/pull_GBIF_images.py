@@ -10,10 +10,10 @@ USDA_JSON_PATH = Path(__file__).parent.parent.parent / "data" / "EOI_Data_Pulls"
 
 IMAGES_ROOT = Path(__file__).parent.parent.parent / "data" / "GBIF_Data_Pulls" / "images"
 
-MAX_IMAGES = 100
+MAX_IMAGES = 120
 MAX_OFFSET = 500
-REQUEST_TIMEOUT = 15
-REQUEST_DELAY = 0.5
+REQUEST_TIMEOUT = 5
+REQUEST_DELAY = 0.3
 
 GBIF_NAME_URL = "https://api.gbif.org/v1/species/match"
 GBIF_OCCURRENCE_URL = "https://api.gbif.org/v1/occurrence/search"
