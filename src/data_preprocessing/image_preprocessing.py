@@ -107,4 +107,5 @@ def preprocess_image(image_path: str, processed_size: tuple=(500,500)):
     if image is None:
         return None
     image = resize_image(image, processed_size)
+
     return image.astype(np.float32)
