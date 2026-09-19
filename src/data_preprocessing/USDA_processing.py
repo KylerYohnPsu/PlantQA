@@ -8,7 +8,21 @@ from . import text_preprocessing as text_pre
 from . import TextEmbedder
 import json
 
-def process_USDA_plant_sheets(root_dir: str, embedder, chunk_method: str="word", chunk_size: int=64, overlap: int=16):
+def embed_USDA_data(root_dir: str, embedder, chunk_method: str="word", chunk_size: int=64, overlap: int=16):
+    all_records= []
+
+    plant_sheets_records= embed_USDA_plant_sheets(root_dir, embedder, chunk_method, chunk_size, overlap)
+    Logger.debug(f"Num plant sheet records: {len(plant_sheets_records)}")
+
+    json_records= embed_USDA_json_data(root_dir, embedder)
+    Logger.debug(f"Num json records: {len(json_records)}")
+
+    all_records.extend(plant_sheets_records)
+    all_records.extend(json_records)
+
+    return all_records
+
+def embed_USDA_plant_sheets(root_dir: str, embedder, chunk_method: str="word", chunk_size: int=64, overlap: int=16):
     """
     Parse every single USDA plant sheet.  Chunk the sheets and embed them into vectors.
     Make a record of each chunk that tracks the chunk's text, embedded vector, and metadata
@@ -22,7 +36,7 @@ def process_USDA_plant_sheets(root_dir: str, embedder, chunk_method: str="word",
         return None
     
     # This will store all of the records, this is returned at the end of the function
-    all_records= {}
+    all_records= []
 
     # Iterate over ever plant sheet subdir and parse the plant sheets inside
     for folder in base_dir.iterdir():
@@ -34,21 +48,36 @@ def process_USDA_plant_sheets(root_dir: str, embedder, chunk_method: str="word",
         json_info= retrieve_USDA_json(root_dir, plant_name)
         metadata= generate_metadata(json_info)
 
-        # make a blank records list that we will extend as we make the records
-        all_records[plant_name]= []
-
         # process the plant sheets (chunk, vectorize, make records)
         records= process_USDA_sheets_sub_dir(folder, metadata, embedder, chunk_method, chunk_size, overlap)
 
         # put the records for this plant in the return dict
-        all_records[plant_name].extend(records)
+        all_records.extend(records)
 
-        # turn the relevant json into embedded records
+    return all_records
+
+def embed_USDA_json_data(root_dir: str, embedder):
+    base_dir= Path(root_dir)
+    json_dir= base_dir / "KB"
+    if not json_dir.is_dir():
+        Logger.error(f"Provided path is not a directory: {json_dir}")
+        return None
+    
+    all_records= []
+
+    for file in json_dir.iterdir():
+        if not file.is_file():
+            continue # not a file, skip
+
+        plant_name= file.name
+        json_info= retrieve_USDA_json(base_dir, plant_name)
+        metadata= generate_metadata(json_info)
+
         json_metadata= metadata.copy()
         json_metadata["source file"]= plant_name
         embeddable_json_text= embedder.object_to_embeddable_string(json_info)
         json_record= embedder.encode_and_make_record(embeddable_json_text, json_metadata)
-        all_records[plant_name].append(json_record)
+        all_records.append(json_record)
 
     return all_records
 
