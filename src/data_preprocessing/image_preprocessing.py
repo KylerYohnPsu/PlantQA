@@ -99,6 +99,24 @@ def resize_image(image: np.ndarray, new_size: tuple[int,int]= (500,500)) -> np.n
     resized_np_image= np.array(resized_image)
     return resized_np_image
 
+def crop_border(image: np.ndarray, threshold: int= 12) -> np.ndarray:
+    """
+    Trim the blank border some of the images are padded with
+    PARAM:
+        image: np.ndarray | The image to trim
+        threshold: int | Pixels at or below this value count as border
+    RETURN:
+        np.ndarray: The image cropped to its content
+    """
+    content= image.max(axis=2) > threshold if image.ndim == 3 else image > threshold
+
+    rows= np.where(content.any(axis=1))[0]
+    cols= np.where(content.any(axis=0))[0]
+    if len(rows) == 0 or len(cols) == 0:
+        return image
+
+    return image[rows[0]:rows[-1] + 1, cols[0]:cols[-1] + 1]
+
 def preprocess_image(image_path: str, processed_size: tuple=(500,500)):
     """
     Preprocess a single image
@@ -106,6 +124,6 @@ def preprocess_image(image_path: str, processed_size: tuple=(500,500)):
     image = load_image(image_path)
     if image is None:
         return None
-    image = resize_image(image, processed_size)
+    image = resize_image(crop_border(image), processed_size)
 
     return image.astype(np.float32)
