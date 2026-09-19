@@ -9,7 +9,7 @@ from src.util.logger import Logger
 
 def get_predictions(vm: VisualModel, df: pd.DataFrame, images_root, batch_size: int = 32):
     ds = VisualModel.make_dataset(df, vm.classes, images_root, size=vm.img_size,
-                                  batch_size=batch_size, training=False)
+                                  batch_size=batch_size, training=False, use_mask=vm.use_mask)
     heads = list(vm.classes)
     y_true = {h: [] for h in heads}
     probs = {h: [] for h in heads}
