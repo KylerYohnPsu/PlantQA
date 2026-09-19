@@ -8,6 +8,7 @@ import tensorflow as tf
 import keras
 from keras import layers
 import src.data_preprocessing.image_preprocessing as img_pre
+import src.data_preprocessing.segmentation as seg
 
 
 @dataclass
@@ -18,23 +19,14 @@ class VisualPrediction:
     heads: Dict[str, List[Tuple[str, float]]]
 
 
-    def species_filter(self, min_confidence: float = 0.60):
-        if self.conf_interval >= min_confidence:
-            return [(self.plant_species, self.conf_interval)]
-        return self.top_k
-    def keywords(self, threshold: float = 0.50) -> Dict[str, List[str]]:
-        return {
-            head: [name for name, conf in preds if conf >= threshold]
-                 for head, preds in self.heads.items()
-                 }
-
 
 class VisualModel:
     def __init__(self, classes: Dict[str, List[str]],
-                 img_size=(224, 224), weights="imagenet"):
+                 img_size=(224, 224), weights="imagenet", use_mask=False):
         self.classes = classes
         self.img_size = img_size
         self.weights = weights  # "imagenet" = transfer and None = from custom
+        self.use_mask = use_mask
         self.model = None
 
     @staticmethod
@@ -71,7 +63,7 @@ class VisualModel:
 
     @staticmethod
     def make_dataset(df, classes, raw_root, size=(224, 224),
-                     batch_size=32, training=False):
+                     batch_size=32, training=False, use_mask=False):
         labels = {}
         for head, names in classes.items():
             index = {name: i for i, name in enumerate(names)}
@@ -83,21 +75,32 @@ class VisualModel:
             lambda p: p if p.startswith("/") else f"{root}/{p}"
         ).to_numpy()
 
-        def load_image(path, label):
+        def load(path, label):
             def preprocess(p):
-                array = img_pre.preprocess_image(p.decode("utf-8"), size)
-                if array is None:
-                    array = np.zeros((*size, 3), np.float32)
+                p = p.decode("utf-8")
+                image = img_pre.load_image(p)
+                if image is None:
+                    image = np.zeros((*size, 3), np.uint8)
+                image = img_pre.crop_border(image)
+                array = np.asarray(img_pre.resize_image(image, size), dtype=np.float32)
+                if use_mask:
+                    return array, seg.mask_from_path(p, size, image)
                 return array
 
-            img = tf.numpy_function(preprocess, [path], tf.float32)
+            if not use_mask:
+                img = tf.numpy_function(preprocess, [path], tf.float32)
+                img.set_shape((*size, 3))
+                return img, label
+
+            img, mask = tf.numpy_function(preprocess, [path], (tf.float32, tf.float32))
             img.set_shape((*size, 3))
-            return img, label
+            mask.set_shape((*size, seg.MASK_CHANNELS))
+            return {"image": img, "mask": mask}, label
 
         data_set = tf.data.Dataset.from_tensor_slices((paths, labels))
-        data_set = data_set.map(load_image, num_parallel_calls=tf.data.AUTOTUNE)
         if training:
-            data_set = data_set.shuffle(1024)
+            data_set = data_set.shuffle(len(paths))
+        data_set = data_set.map(load, num_parallel_calls=tf.data.AUTOTUNE)
         return data_set.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
     def build(self):
@@ -109,22 +112,34 @@ class VisualModel:
         )
         base.trainable = self.weights is None  # freezing the pretrained weights if any
 
-        inputs = keras.Input(shape=(None, None, 3), name="image")
-        x = layers.Resizing(*self.img_size)(inputs)
+        image_input = keras.Input(shape=(None, None, 3), name="image")
+        x = layers.Resizing(*self.img_size)(image_input)
         x = base(x)
         x = layers.Dropout(0.3)(x)
+
+        inputs = image_input
+        if self.use_mask:
+            mask_input = keras.Input(shape=(*self.img_size, seg.MASK_CHANNELS), name="mask")
+            m = layers.Conv2D(32, 3, activation="relu", padding="same")(mask_input)
+            m = layers.BatchNormalization()(m)
+            m = layers.MaxPooling2D()(m)
+            m = layers.Conv2D(64, 3, activation="relu", padding="same")(m)
+            m = layers.BatchNormalization()(m)
+            m = layers.GlobalAveragePooling2D()(m)
+            m = layers.Dense(128, activation="relu")(m)
+
+            inputs = [image_input, mask_input]
+            x = layers.Concatenate()([x, m])
 
         outputs = [layers.Dense(len(names), activation = "softmax", name = head)(x) for head, names in self.classes.items()]
 
         self.model = keras.Model(inputs, outputs, name="plantqa_visual")
         return self.model
 
-    def compile(self, lr=1e-3, head_weight = None):
-        weights = head_weight or {"crop": 1.0, "disease": 1.0, "category": .3, "severity": .3}
+    def compile(self, lr=1e-3):
         self.model.compile(
             optimizer=keras.optimizers.Adam(lr),
             loss={h: "sparse_categorical_crossentropy" for h in self.classes},
-            loss_weights={h: weights.get(h, 1.0) for h in self.classes},
             metrics={h: ["accuracy"] for h in self.classes},
         )
 
@@ -139,7 +154,15 @@ class VisualModel:
                               epochs=epochs, callbacks=calls)
 
     def predict(self, image: np.ndarray, k: int = 3) -> VisualPrediction:
-        preds = self.model.predict(np.expand_dims(image, 0), verbose=0)
+        if self.use_mask:
+            resized = img_pre.resize_image(seg.to_rgb_uint8(image), self.img_size)
+            mask = seg.make_mask(resized, self.img_size).astype(np.float32) / 255.0
+            model_input = {"image": np.expand_dims(resized.astype(np.float32), 0),
+                           "mask": np.expand_dims(mask, 0)}
+        else:
+            model_input = np.expand_dims(image, 0)
+
+        preds = self.model.predict(model_input, verbose=0)
         out = {}
         for (head, names), pred_out in zip(self.classes.items(), preds):
             p = pred_out[0]
@@ -172,6 +195,7 @@ class VisualModel:
 
         vm = cls(classes=classes, img_size=img_size)
         vm.model = keras.models.load_model(model_path)
+        vm.use_mask = len(vm.model.inputs) > 1
 
         for head, names in classes.items():
             n_out = vm.model.get_layer(head).output.shape[-1]
@@ -206,5 +230,3 @@ if __name__ == "__main__":
     print("\nspecies: ", pred.plant_species, round(pred.conf_interval, 3))
     print("top_k: ", pred.top_k)
     print("heads: ", list(pred.heads.keys()))
-    print("keywords: ", pred.keywords(threshold=0.0))   # 0.0mit
-    print("filter: ", pred.species_filter(min_confidence=0.6))
