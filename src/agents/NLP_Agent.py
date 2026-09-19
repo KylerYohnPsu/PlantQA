@@ -12,9 +12,6 @@ from dataclasses import dataclass
 from typing import List, Tuple
 
 import numpy as np
-import tensorflow as tf
-import keras
-from keras import layers
 from src.util.logger import Logger
 
 
@@ -29,13 +26,8 @@ class TextAnswer:
 
 
 class AnswerRanker:
-    def __init__(self, embedder, vocab_size=30522, dim=256, temperature=0.05):
+    def __init__(self, embedder):
         self.embedder = embedder
-        self.vocab_size = vocab_size
-        self.dim = dim
-        self.temperature = temperature
-        self.encoder = None
-        self.model = None
 
     @staticmethod
     def build_query(question, visual_prediction):
@@ -52,57 +44,6 @@ class AnswerRanker:
             pools[key] = list(pairs.items())[:max_per_pool]
         return pools
 
-    @staticmethod
-    def make_dataset(data, tokenizer, batch_size=256, training=False):
-        queries = [f"{q} [SEP] {c} {d} {s}" for q, c, d, s in
-                   zip(data["question_text"], data["crop"], data["disease"], data["severity"])]
-
-        question_ids, _ = tokenizer.encode_text(queries)
-        answer_ids, _ = tokenizer.encode_text(data["answer"])
-
-        inputs = {"question_ids": question_ids, "answer_ids": answer_ids}
-        labels = np.zeros(len(data), dtype="int32")
-
-        data_set = tf.data.Dataset.from_tensor_slices((inputs, labels))
-        if training:
-            data_set = data_set.shuffle(8192)
-        return data_set.batch(batch_size, drop_remainder=True).prefetch(tf.data.AUTOTUNE)
-
-    def build(self):
-        ids = keras.Input(shape=(None,), dtype="int32")
-        x = layers.Embedding(self.vocab_size, self.dim, mask_zero=True)(ids)
-        x = layers.GlobalAveragePooling1D()(x)
-        x = layers.UnitNormalization()(x)
-        self.encoder = keras.Model(ids, x, name="encoder")
-
-        question_ids = keras.Input(shape=(None,), dtype="int32", name="question_ids")
-        answer_ids = keras.Input(shape=(None,), dtype="int32", name="answer_ids")
-
-        scores = layers.Lambda(
-            lambda t: tf.matmul(t[0], t[1], transpose_b=True) / self.temperature, # Cosine similarity scorer in logits
-            output_shape=lambda s: (s[0][0], s[0][0]),
-            name="scores",
-        )([self.encoder(question_ids), self.encoder(answer_ids)])
-
-        self.model = keras.Model([question_ids, answer_ids], scores, name="plantqa_ranker")
-        return self.model
-
-    def compile(self, lr=1e-3):
-        self.model.compile(
-            optimizer=keras.optimizers.Adam(lr),
-            loss=in_batch_loss,
-            metrics=[recall_at_1],
-        )
-
-    def fit(self, train_ds, val_ds, epochs=20):
-        calls = [
-            keras.callbacks.EarlyStopping("val_recall_at_1", patience=4, mode="max",
-                                          restore_best_weights=True),
-            keras.callbacks.ModelCheckpoint("best_text.keras", monitor="val_recall_at_1",
-                                            mode="max", save_best_only=True),
-        ]
-        return self.model.fit(train_ds, validation_data=val_ds,
-                              epochs=epochs, callbacks=calls)
 
     def predict(self, question, visual_prediction, candidates, k=3):
         if not candidates:
@@ -127,16 +68,6 @@ class AnswerRanker:
     def save(self, path):
         self.model.save(path)
 
-
-def in_batch_loss(y_true, y_pred):
-    targets = tf.range(tf.shape(y_pred)[0])
-    return keras.losses.sparse_categorical_crossentropy(targets, y_pred, from_logits=True)
-
-
-def recall_at_1(y_true, y_pred):
-    targets = tf.range(tf.shape(y_pred)[0])
-    predicted = tf.cast(tf.argmax(y_pred, axis=-1), targets.dtype)
-    return tf.cast(tf.equal(predicted, targets), "float32")
 
 
 if __name__ == "__main__":
