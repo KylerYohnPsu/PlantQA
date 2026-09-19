@@ -49,6 +49,14 @@ class TextEmbedder:
         """
         embeddings= self._embedder.encode(text, convert_to_numpy=True)
         return embeddings
+
+    def encode_and_make_record(self, text: str, metadata: dict={}):
+        """
+        encode a string and make a record for it
+        """
+        embedding= self.encode(text)
+        record= EmbeddingRecord(text, embedding, metadata)
+        return record
     
     def chunk(self, text: str, split_method: str, max_size: 
         int, overlap_amount: int) -> list[str]:
@@ -127,10 +135,35 @@ class TextEmbedder:
 
         return records
 
-        
+    def object_to_embeddable_string(self, obj: object):
+        if isinstance(obj, dict):
+            return self.dict_to_embeddable_string(obj)
+        elif isinstance(obj, list):
+            return self.list_to_embeddable_string(obj)
+        elif isinstance(obj, str):
+            return obj.replace("_", " ")
+        else:
+            return str(obj)
 
 
     ################# HELPER FUNCTIONS ######################
+    def dict_to_embeddable_string(self, d: dict):
+        embeddable_string= ""
+        for key, value in d.items():
+            key_string= self.object_to_embeddable_string(key)
+            val_string= self.object_to_embeddable_string(value)
+            substring= f"{key_string}: {val_string}"
+            embeddable_string+= f"{substring}\n"
+        return embeddable_string
+    
+    def list_to_embeddable_string(self, l: list):
+        str_list= []
+        for entry in l:
+            str_entry= self.object_to_embeddable_string(entry)
+            str_list.append(str_entry)
+        
+        embeddable_string= "\n\t".join(str_list)
+        return embeddable_string
 
     def make_records(self, chunks: list[str], embeddings, metadata= {}):
         if len(chunks) != len(embeddings):

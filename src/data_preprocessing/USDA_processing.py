@@ -30,18 +30,9 @@ def process_USDA_plant_sheets(root_dir: str, embedder, chunk_method: str="word",
             continue # not a folder, skip
 
         # determine what to store the record under in the dictionary (either plant code or common name)
-        plant_code= folder.name
-        metadata= retrieve_USDA_metadata(root_dir, plant_code)
-        if "common_name" in metadata:
-            plant_name= metadata["common_name"]
-            if plant_name is None:
-                Logger.warning("Plant name is none, using plant code instead")
-                plant_name= plant_code
-            else:
-                plant_name= plant_name.lower()
-        else:
-            Logger.warning("No common name found, using plant code instead")
-            plant_name= plant_code
+        plant_name= folder.name
+        json_info= retrieve_USDA_json(root_dir, plant_name)
+        metadata= generate_metadata(json_info)
 
         # make a blank records list that we will extend as we make the records
         all_records[plant_name]= []
@@ -52,9 +43,16 @@ def process_USDA_plant_sheets(root_dir: str, embedder, chunk_method: str="word",
         # put the records for this plant in the return dict
         all_records[plant_name].extend(records)
 
+        # turn the relevant json into embedded records
+        json_metadata= metadata.copy()
+        json_metadata["source file"]= plant_name
+        embeddable_json_text= embedder.object_to_embeddable_string(json_info)
+        json_record= embedder.encode_and_make_record(embeddable_json_text, json_metadata)
+        all_records[plant_name].append(json_record)
+
     return all_records
 
-def retrieve_USDA_metadata(base_dir, code):
+def retrieve_USDA_json(base_dir, code):
     """
     parse the metadata file for the specified plant code
     """
@@ -66,6 +64,21 @@ def retrieve_USDA_metadata(base_dir, code):
     with open(metadata_file, 'r') as file:
         metadata= json.load(file)
 
+    return metadata
+
+def generate_metadata(data: dict):
+    """
+    return a metadata dict with key info in it
+    """
+    code= data["symbol"]
+    name= data["common_name"]
+    sci_name= data["scientific_name"]
+
+    metadata= {
+        "code": code,
+        "common name": name,
+        "scientific name": sci_name,
+    }
     return metadata
     
 def process_USDA_sheets_sub_dir(folder: Path, metadata: dict, embedder, chunk_method: str, chunk_size: int, overlap: int):
@@ -95,10 +108,15 @@ def process_USDA_sheets_sub_dir(folder: Path, metadata: dict, embedder, chunk_me
         text= text.replace("<","")
         text= text.replace(">","")
 
+        # update the metadata to have file specific info
+        specific_metadata= metadata.copy()
+        specific_metadata["source file"]= file.name
+
+
         # chunk, encode, and make records of the data
-        records= embedder.chunk_and_encode(text, chunk_method, chunk_size, overlap, metadata)
+        records= embedder.chunk_and_encode(text, chunk_method, chunk_size, overlap, specific_metadata)
 
         # put the records in the return list
         plant_records.extend(records)
-        
+
     return plant_records
