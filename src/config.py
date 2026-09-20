@@ -51,4 +51,16 @@ class Data:
         PLANT_SHEETS= ROOT / "plant_sheets"
         JSON_FILES= ROOT / "KB"
 
+    class LeafBranch:
+        """
+        Config for LeafBranch/LeafLet dataset management
+        """
+        ROOT= General.DATA_DIR / "PlantLeafLet"
+        DATA= ROOT / "data"
+        CSV= ROOT / "csv"
+
+        TEXT_COLUMNS= ["question"]
+        COLUMNS_TO_REMOVE= []
+        NA_FILL= {}
+
 

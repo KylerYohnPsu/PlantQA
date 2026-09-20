@@ -4,6 +4,15 @@ import pandas as pd
 import re
 from pathlib import Path
 
+def is_csv(file: Path):
+    if not isinstance(file, Path):
+        raise TypeError("Only accepts Path objects")
+    
+    if file.is_file() and file.suffix.lower() == ".csv":
+        return True
+    else:
+        return False
+
 def is_pdf(file: Path):
     if not isinstance(file, Path):
         raise TypeError("Only accepts Path objects")
