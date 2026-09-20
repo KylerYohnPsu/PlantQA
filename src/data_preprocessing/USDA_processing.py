@@ -7,6 +7,7 @@ from pathlib import Path
 from . import text_preprocessing as text_pre
 from . import TextEmbedder
 import json
+import pandas as pd
 
 def embed_USDA_data(root_dir: str, embedder, chunk_method: str="word", chunk_size: int=64, overlap: int=16):
     all_records= []
@@ -21,6 +22,42 @@ def embed_USDA_data(root_dir: str, embedder, chunk_method: str="word", chunk_siz
     all_records.extend(json_records)
 
     return all_records
+
+def make_USDA_plant_sheets_dataframe(plant_sheet_dir: str):
+    plant_sheets_data= load_USDA_plant_sheet_data(plant_sheet_dir)
+    frame= pd.DataFrame(plant_sheets_data, columns=["text"])
+    return frame
+
+def load_USDA_plant_sheet_data(plant_sheet_dir: str):
+    base_dir= Path(plant_sheet_dir)
+    if not base_dir.is_dir():
+        Logger.error(f"Provided path is not a directory: {base_dir}")
+        return None
+    
+    plant_sheets_data= []
+
+    for subdir in base_dir.iterdir():
+        if not subdir.is_dir():
+            continue # not a dir, skip
+
+        for file in subdir.iterdir():
+            if general_utils.is_pdf(file):
+                # load the text data in the pdf
+                text= text_pre.load_pdf_text_data(file)
+            elif general_utils.is_docx(file):
+                # load the text data in the docx file
+                text= text_pre.load_docx_text_data(file)
+            else:
+                # invalid file, skip
+                Logger.warning(f"Unexpected type found: {file}")
+                continue
+
+            plant_sheets_data.append(text)
+
+    return plant_sheets_data
+
+
+
 
 def embed_USDA_plant_sheets(root_dir: str, embedder, chunk_method: str="word", chunk_size: int=64, overlap: int=16):
     """

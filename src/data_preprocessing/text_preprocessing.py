@@ -27,7 +27,7 @@ STOP_WORDS= [
     "from", "with", "can", "could", "would",
     "should", "will", "shall", "may",
     "might", "has", "have", "had",
-    "any", "if",
+    "any", "if", "by", "it", "as",
 ]
 
 def load_csv(csv_path: str):
