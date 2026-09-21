@@ -51,17 +51,9 @@ class AnswerIndex:
         embeddings = self.embedder.encode(texts)
         self.add_records([EmbeddingRecord(text, embedding, dict(meta)) for text, embedding, meta in zip(texts, embeddings, metadata)])
 
-    def mask(self, **filters):
-        keep = np.ones(len(self), dtype=bool)
-        for key, value in filters.items():
-            keep &= self.column(key) == value
-        return keep
-    def search(self, query, k=3, mask=None):
+    def search(self, query, k=3):
         query_vec = self.embedder.encode(query, normalize = True)
         scores = self.vectors @ query_vec
-
-        if mask is not None:
-            scores = np.where(mask, scores, -np.inf) #if mask is not true set to negative infinity
 
         k = min(k, int(np.isfinite(scores).sum()))
         if k == 0:
@@ -85,7 +77,7 @@ class AnswerRanker:
 
     def predict(self, question, visual_prediction, k=3):
         query = self.build_query(question, visual_prediction)
-        ranked = self.index.search(query, k=k, mask=candidate_mask(self.index, visual_prediction))
+        ranked = self.index.search(query, k=k)
 
         if not ranked:
             Logger.warning("[predict] no candidates matched")
@@ -106,16 +98,6 @@ def build_answer_index(embedder, data):
 def add_usda_records(index, records):
     tagged = [EmbeddingRecord(r.text, r.embedding, dict(r.metadata, source="usda")) for r in records]
     index.add_records(tagged)
-
-def candidate_mask(index, visual_prediction, minimum=5):
-    crop = visual_prediction.heads["crop"][0][0]
-    disease = visual_prediction.heads["disease"][0][0]
-
-    for filters in ({"crop": crop, "disease": disease}, {"crop": crop}, {}):
-        mask = index.mask(**filters)
-        if mask.sum() >= minimum:
-            return mask
-    return np.ones(len(index), dtype=bool)
 
 if __name__ == "__main__":
     import pandas as pd
