@@ -42,3 +42,31 @@ def mask_from_path(image_path, size=(224, 224), image=None):
     if image is None:
         return np.zeros((size[1], size[0], MASK_CHANNELS), np.float32)
     return make_mask(image, size).astype(np.float32) / 255.0
+
+
+def k_means(image, k: int):
+
+    img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    pixel_values = img_rgb.reshape((-1,3))
+
+    pixel_values = np.float32(pixel_values)
+
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+
+    compactness, labels, centers = cv2.kmeans(
+        pixel_values,
+        k,
+        None,
+        criteria,
+        attempts=10,
+        flags=cv2.KMEANS_RANDOM_CENTERS
+    )
+
+    centers = np.uint8(centers)
+
+    segmented_data = centers[labels.flatten()]
+    segmented_image = segmented_data.reshape((image.shape))
+
+    return segmented_image
+
