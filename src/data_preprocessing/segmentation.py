@@ -18,8 +18,8 @@ def to_rgb_uint8(image):
 
 
 def clahe(image, clip_limit=2.0, tile=(8, 8)):
-    gray = cv2.cvtColor(to_rgb_uint8(image), cv2.COLOR_RGB2GRAY)
-    return cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile).apply(gray)
+    gray_image = cv2.cvtColor(to_rgb_uint8(image), cv2.COLOR_RGB2GRAY)
+    return cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile).apply(gray_image)
 
 
 def foreground(image):
