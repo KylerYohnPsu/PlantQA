@@ -3,7 +3,6 @@ Put code for exploring image data here
 """
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
 import src.data_preprocessing.image_preprocessing as img_pre
 import src.data_preprocessing.segmentation as seg
