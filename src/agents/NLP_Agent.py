@@ -70,7 +70,7 @@ class AnswerRanker:
 
     @staticmethod
     def build_query(question, visual_prediction):
-        h = visual_prediction.heads
+        h = visual_prediction.classification_heads
         return (f"{question} Crop: {h['crop'][0][0]}. Disease: {h['disease'][0][0]}. "
             + f"Severity: {h['severity'][0][0]}.")
 
