@@ -24,3 +24,4 @@ pypdf
 pymupdf
 sentence-transformers
 python-docx
+supabase
