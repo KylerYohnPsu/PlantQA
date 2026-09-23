@@ -23,11 +23,21 @@ class Logging:
     }
 
 class Data:
+    class GBIF:
+        """
+        Config for GBIF dataset management
+        """
+        ROOT= General.DATA_DIR / "GBIF"
+        TRAIN_FILE= ROOT / "GBIF_Train_Data_set.csv"
+        TEST_FILE= ROOT / "GBIF_Test_Data_set.csv"
+        VALIDATION_FILE= ROOT / "GBIF_val_Data_set.csv"
+        FULL_FILE= ROOT / "GBIF_Data_set.csv"
+
     class PlantExpertVQA:
         """
         Config for PlantExpertVQA dataset management
         """
-        ROOT= General.DATA_DIR /"PlantExpertVQA"
+        ROOT= General.DATA_DIR / "PlantExpertVQA"
         DATA= ROOT / "data"
         TRAIN_FILE= DATA / "train.csv"
         TEST_FILE= DATA / "test.csv"
