@@ -15,7 +15,7 @@ def full_path(image_path, images_root):
     return f"{str(images_root).rstrip('/')}/{image_path}"
 
 
-def load_sample_image(data, plant_images_root, count, seed: int = 0) -> list:
+def load_sample_image(data, plant_images_root, count, seed: int = 0):
     image_paths = data["image_path"].drop_duplicates().sample(count, random_state=seed)
 
     plant_images = []
