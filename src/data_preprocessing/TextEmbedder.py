@@ -43,11 +43,11 @@ class TextEmbedder:
 
     ######## PRIMARY FUNCTIONS #########
 
-    def encode(self, text: str | list[str]):
+    def encode(self, text: str | list[str], normalize = False):
         """
         Create the embedded vector out of the text data (either single string, or list of strings)
         """
-        embeddings= self._embedder.encode(text, convert_to_numpy=True)
+        embeddings= self._embedder.encode(text, convert_to_numpy=True, normalize_embeddings=normalize)
         return embeddings
 
     def encode_and_make_record(self, text: str, metadata: dict={}):
