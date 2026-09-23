@@ -201,5 +201,5 @@ class VisualModel:
         for c_head, names in saved_classes.items():
             number_out = visual_model.model.get_layer(c_head).output.shape[-1]
             if number_out != len(names):
-                raise ValueError(f"head '{c_head}': model has {number_out} outputs but {len(names)} class names")
+                raise ValueError(f"head '{c_head}': model has {number_out} outputs listed and {len(names)} class names provided")
         return visual_model
