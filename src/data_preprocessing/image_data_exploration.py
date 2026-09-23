@@ -30,7 +30,7 @@ def load_sample_image(data, plant_images_root, count, seed: int = 0) -> list:
 def show_labels(data, heads):
     rows = len(data)
     images = data["image_path"].nunique()
-    print(f"question rows: {rows}   unique images: {images}   rows per image: {rows / images:.1f}")
+    print(f"question rows: {rows}\nunique images: {images}\nrows per image: {rows / images:.1f}")
 
     for head in heads:
         per_image = data.groupby("image_path")[head].nunique()
