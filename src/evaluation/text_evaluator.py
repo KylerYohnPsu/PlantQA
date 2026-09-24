@@ -31,18 +31,6 @@ def recall_at_k(ranked_texts, answers, k):
     return float(matches.any(axis=1).mean())
 
 
-def gold_rank(index, scores, answers):
-    positions = {r.text: i for i, r in enumerate(index.records)}
-    ranks = []
-
-    for row, answer in enumerate(answers):
-        position = positions.get(answer)
-        if position is not None:
-            ranks.append(int((scores[row] > scores[row, position]).sum()) + 1)
-
-    return np.array(ranks)
-
-
 def top1_similarity(index, scores, answers):
     best = scores.argmax(axis=1)
     gold = index.embedder.encode(answers, normalize=True)
@@ -73,14 +61,12 @@ def evaluate_ranker(ranker, data, sample=200, ks=(1, 3, 5), seed=0, name="Text")
     answers = rows["answer"].to_numpy()
 
     indexed = {record.text for record in index.records}
-    ranks = gold_rank(index, scores, answers)
     similarity = top1_similarity(index, scores, answers)
     crop, disease = label_match(index, scores, rows)
 
     results = {f"recall@{k}": recall_at_k(ranked, answers, k) for k in ks}
     results["ceiling"] = np.mean([a in indexed for a in answers])
     results[f"baseline@{max(ks)}"] = max(ks) / len(index)
-    results["median_gold_rank"] = np.median(ranks) if len(ranks) else np.nan
     results["mean_top1_similarity"] = similarity.mean()
     results["top1_similarity>0.7"] = (similarity > 0.7).mean()
     results["crop_match"] = crop.mean()
@@ -111,14 +97,12 @@ def inspect(ranker, data, count=3, seed=0, k=5, show_image=True):
                 plt.title(f"{row.crop} | {row.disease} | {row.severity}", fontsize=9)
                 plt.show()
 
-        print("image:", row.image_path)
-        print("question:", row.question_text)
-        print("query:", query)
-        print("expected:", row.answer)
-        print("in index:", row.answer in indexed)
-        print("returned:")
+        Logger.info(f"image: {row.image_path}")
+        Logger.info(f"question {row.question_text}")
+        Logger.info(f"query: {query}")
+        Logger.info(f"expected: {row.answer}")
+        Logger.info(f"in index: {row.answer in indexed}")
+        Logger.info("returned:\n---------\n")
 
         for record, score in ranked:
-            print(f"{score:.3f} [{record.metadata.get('source')}] {record.text[:110]}")
-
-        print("-" * 110)
+            Logger.info(f"{score:.3f} [{record.metadata.get('source')}] {record.text[:110]}")
