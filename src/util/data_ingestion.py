@@ -31,10 +31,11 @@ def ingest_to_supabase(records, supabase_client):
             print(f"Batch {i} Failed to insert {total} embeddings to supabase: {e}")
     Logger.info(f"Completed: Inserted {total} embeddings to supabase")
 
-def add_metadata_tags(records, supabase_client):
+def add_metadata_tags(records, supabase_client, start_count = 0):
     batch_size = 1000
     total = 0
-    for i in range(0, len(records), batch_size):
+    start = start_count
+    for i in range(start, len(records), batch_size):
         batch = records[i:i + batch_size]
         for j, record in enumerate(batch):
             row_id = i + j
