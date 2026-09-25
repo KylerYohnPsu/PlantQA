@@ -33,8 +33,8 @@ def recall_at_k(ranked_texts, answers, k):
 
 def top1_similarity(index, scores, answers):
     best = scores.argmax(axis=1)
-    gold = index.embedder.encode(answers, normalize=True)
-    return (index.vectors[best] * gold).sum(axis=1)
+    truth = index.embedder.encode(answers, normalize=True)
+    return (index.vectors[best] * truth).sum(axis=1)
 
 
 def label_match(index, scores, rows):
@@ -47,12 +47,12 @@ def label_match(index, scores, rows):
     return np.array(crop), np.array(disease)
 
 
-def evaluate_ranker(ranker, data, sample=200, ks=(1, 3, 5), seed=0, name="Text"):
-    index = ranker.index
+def evaluate_answer_ranker(answer_ranker, data, sample=200, ks=(1, 3, 5), seed=0, name="Text"):
+    index = answer_ranker.index
     rows = data.sample(min(sample, len(data)), random_state=seed)
 
     queries = [
-        ranker.build_query(row.question_text, prediction_from_row(row))
+        answer_ranker.build_query(row.question_text, prediction_from_row(row))
         for row in rows.itertuples()
     ]
 
@@ -65,10 +65,9 @@ def evaluate_ranker(ranker, data, sample=200, ks=(1, 3, 5), seed=0, name="Text")
     crop, disease = label_match(index, scores, rows)
 
     results = {f"recall@{k}": recall_at_k(ranked, answers, k) for k in ks}
-    results["ceiling"] = np.mean([a in indexed for a in answers])
+    results["ceiling"] = np.mean([a in indexed for a in answers], dtype=float)
     results[f"baseline@{max(ks)}"] = max(ks) / len(index)
     results["mean_top1_similarity"] = similarity.mean()
-    results["top1_similarity>0.7"] = (similarity > 0.7).mean()
     results["crop_match"] = crop.mean()
     results["disease_match"] = disease.mean()
     results["index_size"] = len(index)
@@ -79,23 +78,21 @@ def evaluate_ranker(ranker, data, sample=200, ks=(1, 3, 5), seed=0, name="Text")
     return table
 
 
-def inspect(ranker, data, count=3, seed=0, k=5, show_image=True):
-    index = ranker.index
+def show_truth(answer_ranker, data, count=3, seed=0, k=5):
+    index = answer_ranker.index
     indexed = {record.text for record in index.records}
 
     for row in data.sample(count, random_state=seed).itertuples():
         visual = prediction_from_row(row)
-        query = ranker.build_query(row.question_text, visual)
+        query = answer_ranker.build_query(row.question_text, visual)
         ranked = index.search(query, k=k)
 
-        if show_image:
-            image = img_pre.load_image(row.image_path)
-            if image is not None:
-                plt.figure(figsize=(3, 3))
-                plt.imshow(image)
-                plt.axis("off")
-                plt.title(f"{row.crop} | {row.disease} | {row.severity}", fontsize=9)
-                plt.show()
+        image = img_pre.load_image(row.image_path)
+        plt.figure(figsize=(3, 3))
+        plt.imshow(image)
+        plt.axis("off")
+        plt.title(f"{row.crop} - {row.disease} - {row.severity}", fontsize=12)
+        plt.show()
 
         Logger.info(f"image: {row.image_path}")
         Logger.info(f"question {row.question_text}")
