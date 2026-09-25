@@ -36,17 +36,15 @@ def add_metadata_tags(records, supabase_client):
     total = 0
     for i in range(0, len(records), batch_size):
         batch = records[i:i + batch_size]
-        rows = [
-            {
-                "id": i + j,
+        for j, record in enumerate(batch):
+            row_id = i + j
+
+            supabase_client.table("embeddings").update({
                 "plant_code": record.metadata.get("code", "unknown"),
                 "common_name": record.metadata.get("common_name", "unknown"),
                 "scientific_name": record.metadata.get("scientific name", "unknown"),
                 "source_file": record.metadata.get("source file", "unknown"),
-            }
-            for j, record in enumerate(batch)
-        ]
-        result = supabase_client.table("embeddings").update(rows).execute()
-        total += len(rows)
+            }).eq("id", row_id).execute()
+            total += 1
         Logger.info(f"Inserted {total} embeddings to supabase")
     Logger.info(f"Completed: Inserted {total} embeddings to supabase")
