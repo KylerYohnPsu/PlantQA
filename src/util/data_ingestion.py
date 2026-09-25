@@ -46,7 +46,7 @@ def add_metadata_tags(records, supabase_client):
             }
             for j, record in enumerate(batch)
         ]
-        result = supabase_client.table("embeddings").upsert(rows).execute()
+        result = supabase_client.table("embeddings").update(rows).execute()
         total += len(rows)
         Logger.info(f"Inserted {total} embeddings to supabase")
     Logger.info(f"Completed: Inserted {total} embeddings to supabase")
