@@ -72,7 +72,7 @@ class VisualModel:
 
         root = str(raw_root).rstrip("/")
         paths = df["image_path"].astype(str).map(
-            lambda p: p if p.startswith("/") else f"{root}/{p}"
+            lambda p: p if p.startswith("/") else f"{root}\{p}"
         ).to_numpy() # add image path for deduping later
 
         def load_plant_image(path, label):
@@ -113,9 +113,9 @@ class VisualModel:
         )
         base.trainable = self.weights is None  # freezing the pretrained weights
 
-        image_input = keras.Input(shape=(None, None, 3), name="image")
-        x = layers.Resizing(*self.img_size)(image_input)
-        x = base(x)
+        image_input = keras.Input(shape=(*self.img_size, 3), name="image")
+        #x = layers.Resizing(*self.img_size)(image_input)
+        x = base(image_input)
         x = layers.Dropout(0.3)(x)
 
         inputs = image_input
