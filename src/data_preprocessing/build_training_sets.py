@@ -8,7 +8,7 @@ USDA_JSON_PATH = Path(__file__).parent.parent.parent / "data" / "EOI_Data_Pulls"
 #Get the Path for the Pre_Processed Images
 PATH_TO_CONVERTED_GBIF = Path(__file__).parent.parent.parent / 'data' / 'GBIF_Pre_Processed' 
 
-MAIN_DATA = pd.DataFrame(columns=["image_id", "image_path", "crop", "disease", "category", "severity"])
+MAIN_DATA = pd.DataFrame(columns=["image_id", "image_path", "group", "family", "genus", "crop", "disease", "category", "severity"])
 #Loop Through each and assign at random an image to Test, an image to Train, and an image to Validation
 #70% of images to Train
 #10% to validation
@@ -31,10 +31,14 @@ for folder in PATH_TO_CONVERTED_GBIF.iterdir():
         img_id = file.name.split(".")[0]
         img_path = f"/{file.parts[-4:][0]}/{file.parts[-4:][1]}/{file.parts[-4:][2]}/{file.parts[-4:][3]}"
         crop = record.get('scientific_name')
+        family = record.get('family')
+        genus = record.get('genus')
+        group = record.get('group')
+        ##Revist this -- Is there a way to diagnose the plants or generate a bool for disease presence and severity? -- Would unknown be better 
         disease = 'healthy'
         category = 'healthy'
         severity = 'healthy'
-        MAIN_DATA.loc[len(MAIN_DATA)] = [img_id, img_path, crop, disease, category, severity]
+        MAIN_DATA.loc[len(MAIN_DATA)] = [img_id, img_path, group, family, genus, crop, disease, category, severity]
 
 project_root = Path(__file__).resolve().parent.parent.parent
 project_root = project_root / "data" / "GBIF_Data_set.csv"
