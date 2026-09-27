@@ -7,10 +7,6 @@ import os
 import pymupdf as fitz
 from docx import Document
 
-# build the set of stopwords we will use to remove stop words from text
-# Do that here, so we don't have to build it each time we call the stop word function
-#STOP_WORDS = set(nltk.corpus.stopwords.words("english"))
-
 
 # Custom built stop words list
 # nltk's stop words are too extreme and remove words like

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VQA Interface</title>
+    <link rel="stylesheet" href="stylesheet.css">
+</head>
+
+<body>
+
+    <div id="header" class="section header">
+        <div id="header-title" class="title">
+            PlantQA
+        </div>
+    </div>
+
+
+
+    <div id="main" class="section main">
+
+        <div id="main-left" class="main-subsection left">
+            <div id="image-panel" class="panel">
+                <input type="file" id="image-upload" accept="image/*">
+                <label for="image-upload" class="image-upload-content">
+                    <svg class="image-icon" viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+                    
+                        <polyline points="3,17 9,11 13,15 16,12 21,17" fill="none" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <div class="upload-text">Click to upload image</div>
+                
+                </label>
+            </div>
+
+
+            <div id="question-panel" class="panel">
+                <input type="text" id="question-input" class="text-input" placeholder="What disease is being shown in this image?">
+                <button type="button">
+                    Ask Question
+                </button>
+        
+            </div>
+        </div>
+
+        <div id="main-right" class="main-subsection right">
+            <div id="answer-panel" class="panel">
+                <div id="answer-display" class="panel-subsection">
+
+                </div>
+            </div>
+            <div id="info-panel" class="panel">
+                <div id="confidence-display" class="panel-box">
+                    <div class="panel-box-header">
+                        Confidence
+                    </div>
+                    <div class="horizontal-divider"></div>
+                    <div id="confidence" class="panel-box-main">
+                        --
+                    </div>
+                </div>
+                <div id="misc1-display" class="panel-box">
+                    <div class="panel-box-header">
+                        Misc
+                    </div>
+                    <div class="horizontal-divider"></div>
+                    <div id="a" class="panel-box-main">
+                        --
+                    </div>
+                </div>
+                <div id="misc2-display" class="panel-box">
+                    <div class="panel-box-header">
+                        Misc
+                    </div>
+                    <div class="horizontal-divider"></div>
+                    <div id="b" class="panel-box-main">
+                        --
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+
+    <div id="footer" class="section footer">
+    </div>
+
+</body>
+
+</html>
+

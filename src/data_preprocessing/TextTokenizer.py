@@ -8,6 +8,9 @@ import re
 from . import text_preprocessing as text_pre
 
 class TextTokenizer:
+    """
+    Class used to tokenize text data
+    """
     def __init__(self, tokenizer_model_name: str,  max_length: int):
         self._modelName= tokenizer_model_name
         self._maxLength= max_length
@@ -35,6 +38,7 @@ class TextTokenizer:
             return_tensors= "np",
         )
 
+        # We use tensorflow, so we need to convert the numpy tokens into TF tensors
         inputs, mask= self._convert_encoding_to_tf_tensors(tokenized_texts)
 
         return inputs, mask
@@ -89,6 +93,9 @@ class TextTokenizer:
 
         
     def _listify_text(self, text: str | list | pd.DataFrame | pd.Series) -> list[str] | None:
+        """
+        Turn the given object into a list that can be easily tokenized
+        """
         if isinstance(text, str):
             return [text]
         elif isinstance(text, list):
@@ -116,6 +123,9 @@ class TextTokenizer:
         return str_list
 
     def _convert_encoding_to_tf_tensors(self, encoding: BatchEncoding):
+        """
+        Change the encoding from a BatchEncoding object to a tensorflow tensor
+        """
         input_ids= encoding["input_ids"]
         attention_mask= encoding["attention_mask"]
 
