@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-EVALUATION_MODEL = "claude-opus-5"
+EVALUATION_MODEL = "claude-haiku-4-5-20251001"
 def prediction_from_row(row, heads=("crop", "disease", "severity")):
     predictions = {}
     for head in heads:
