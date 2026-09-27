@@ -26,26 +26,22 @@ def ingest_to_supabase(records, supabase_client):
             print(f"Batch {i} Failed to insert {total} embeddings to supabase: {e}")
     Logger.info(f"Completed: Inserted {total} embeddings to supabase")
 
-def add_metadata_tags(records, supabase_client, start_count = 0):
-    batch_size = 1000
-    total = 0
-    start = start_count
-    for i in range(start, len(records), batch_size):
-        batch = records[i:i + batch_size]
-        for j, record in enumerate(batch):
-            row_id = i + j
-            plant_code = record.metadata.get("code")
-            update_dict = {
-                "plant_code": plant_code,
-                "common_name": record.metadata.get("common name"),
-                "scientific_name": record.metadata.get("scientific name"),
-                "source_file": record.metadata.get("source file"),
-                "genus": record.metadata.get("genus"),
-                "family": record.metadata.get("family"),
-                "plant_group": record.metadata.get("group"),
-            }
+def add_metadata_tags(records, supabase_client):
+    seen_plants = set()
+    for record in records:
+        plant_code = record.metadata.get("code")
+        if plant_code in seen_plants:
+            continue
+        seen_plants.add(plant_code)
 
-            supabase_client.table("embeddings").update(update_dict).eq("id", row_id).execute()
-            total += 1
-        Logger.info(f"Updated {total}")
-    Logger.info(f"Completed: Inserted {total} embeddings to supabase")
+        update_dict = {
+            "common_name": record.metadata.get("common name"),
+            "scientific_name": record.metadata.get("scientific name"),
+            "genus": record.metadata.get("genus"),
+            "family": record.metadata.get("family"),
+            "plant_group": record.metadata.get("group"),
+        }
+
+        supabase_client.table("embeddings").update(update_dict).eq("plant_code", plant_code).execute()
+
+    Logger.info(f"Updated {len(seen_plants)} plant codes")
