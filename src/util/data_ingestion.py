@@ -1,14 +1,7 @@
-import supabase
-import os
-from dotenv import load_dotenv
+import util.supabase_utils as supabase_utils
 from src.util.logger import Logger
-load_dotenv()
-def connect_supabase():
-    load_dotenv()
-    SUPABASE_URL = os.getenv("SUPABASE_URL")  # Get from .env
-    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-    supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
-    return supabase_client
+
+
 
 def ingest_to_supabase(records, supabase_client):
     batch_size = 1000

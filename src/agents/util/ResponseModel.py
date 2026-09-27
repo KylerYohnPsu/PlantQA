@@ -1,34 +1,53 @@
 from transformers import (AutoModelForCausalLM, AutoTokenizer,
                           BitsAndBytesConfig, Trainer, TrainingArguments)
+from peft import (LoraConfig, PeftModel, get_peft_model,
+                  prepare_model_for_kbit_training)
+import bitsandbytes
 import torch
 SYSTEM_PROMPT = ("You are a plant expert. You are to use the referenced chunks provided in the user input"
-                 "to help users with their questions. If the chunks are not relevant, do not use them. Do not invent facts")
+                " to help users with their questions. If the chunks are not relevant, do not use them. Do not invent facts")
 class ResponseModel:
-    def __init__(self, model_name = 'Qwen/Qwen2.5-7B-Instruct'):
+    def __init__(self, model_name = 'Qwen/Qwen2.5-3B-Instruct', lora = None, adapter = None):
         self.model_name = model_name
-        self.model = self.build_model(model_name)
+        self.model = self.build_model(model_name, lora = lora, adapter = adapter)
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    def generate_answer(self, question, chunks):
+    def generate_answer(self, question, chunks, max_tokens = 220):
         prompt = self.build_prompt(question, chunks)
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
         with torch.no_grad():
-            outputs = self.model.generate(inputs["input_ids"], max_length = 200)
+            outputs = self.model.generate(**inputs, max_length = max_tokens)
         completion = outputs[0][inputs["input_ids"].shape[1]:]
         return self.tokenizer.decode(completion, skip_special_tokens=True).strip()
 
-    def build_model(self, model_name = "Qwen/Qwen2.5-7B-Instruct"):
-        return AutoModelForCausalLM.from_pretrained(
+    def build_model(self, model_name = "Qwen/Qwen2.5-7B-Instruct", lora = None, adapter = None):
+        # source for later https://huggingface.co/blog/4bit-transformers-bitsandbytes & huggingface.co/docs/transformers/quantization/bitsandbytes
+        model = AutoModelForCausalLM.from_pretrained(
             model_name,
+            quantization_config=BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_use_double_quant=True,
+            ),
             torch_dtype="auto",
             device_map="auto"
         )
+        if adapter:
+            return PeftModel.from_pretrained(model, adapter)
+        if lora:
+            model = prepare_model_for_kbit_training(model)
+            return get_peft_model(model, LoraConfig(
+                r=16, lora_alpha=32, task_type="CAUSAL_LM",
+                target_modules=["q_proj", "k_proj", "v_proj", "o_proj"]))
+        return model
 
     def build_prompt(self, question, chunks):
-        prompt = f"plant question:\nquestion:{question}\nretrieved context:\n{chunks}"
+        context = "\n".join(c["body"][:400] for c in chunks) if chunks else "(none)"
+        prompt = f"plant question:\nquestion:{question}\nretrieved context:\n{context}"
         return self.tokenizer.apply_chat_template(
             [{"role": "system", "content": SYSTEM_PROMPT},
-             {"role": "user", "content": "\n\n".join(prompt)}],
+             {"role": "user", "content": prompt}],
             tokenize=False, add_generation_prompt=True)
 
 
@@ -61,7 +80,8 @@ class ResponseModel:
         self.model.save_pretrained(path)
 
     def load_model(self, path="./models/response_models/qwen_lora"):
-        return self.build_model(adapter=path)
+        self.model = PeftModel.from_pretrained(self.model, path)
+        return self.model
 
 
 """
@@ -79,4 +99,6 @@ class ResponseModel:
           journal={arXiv preprint arXiv:2407.10671},
           year={2024}
     }
+    
+
 """
