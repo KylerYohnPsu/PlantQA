@@ -144,6 +144,9 @@ def generate_metadata(data: dict):
         "code": code,
         "common name": name,
         "scientific name": sci_name,
+        "genus": data.get("genus"),
+        "family": data.get("family"),
+        "plant_group": data.get("group"),
     }
     return metadata
     
