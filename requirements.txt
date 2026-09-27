@@ -25,3 +25,5 @@ pymupdf
 sentence-transformers
 python-docx
 supabase
+anthropic
+bitsandbytes

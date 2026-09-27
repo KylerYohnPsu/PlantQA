@@ -61,7 +61,7 @@ def plot_confusion_matrix(predictions, classes, c_head):
 
 
 
-def history_frame(*histories):
+def frame_history(*histories):
     frames = []
     for history in histories:
         if hasattr(history, "history"):
@@ -75,7 +75,7 @@ def history_frame(*histories):
     return frame
 
 def plot_loss(*histories, heads=None):
-    frame = history_frame(*histories)
+    frame = frame_history(*histories)
     names = [f"{h}_loss" for h in heads] if heads else ["loss"]
 
     plt.figure(figsize=(8, 5))
@@ -93,7 +93,7 @@ def plot_loss(*histories, heads=None):
 
 
 def plot_accuracy(*histories, heads=None):
-    frame = history_frame(*histories)
+    frame = frame_history(*histories)
     heads = heads or [c[:-len("_accuracy")] for c in frame if c.endswith("_accuracy") and not c.startswith("val_")]
 
     plt.figure(figsize=(8, 5))
@@ -110,7 +110,7 @@ def plot_accuracy(*histories, heads=None):
     plt.show()
 
 
-def evaluate(visual_model: VisualModel, df: pd.DataFrame, images_root, name = "Test",
+def evaluate(visual_model: VisualModel, df: pd.DataFrame, images_root, name = "Visual Model Test",
              num_results = 3, max_matrix_classes = 15):
     Logger.info(f"\n\n {name}: evaluating {len(df)} images \n\n")
     predictions = predict(visual_model, df, images_root)
