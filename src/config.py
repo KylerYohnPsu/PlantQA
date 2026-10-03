@@ -28,9 +28,9 @@ class Data:
         Config for GBIF dataset management
         """
         ROOT= General.DATA_DIR / "GBIF"
-        TRAIN_FILE= ROOT / "GBIF_Train_Data_set.csv"
-        TEST_FILE= ROOT / "GBIF_Test_Data_set.csv"
-        VALIDATION_FILE= ROOT / "GBIF_val_Data_set.csv"
+        TRAIN_FILE= ROOT / "train_df.csv"
+        TEST_FILE= ROOT / "test_df.csv"
+        VALIDATION_FILE= ROOT / "val_df.csv"
         FULL_FILE= ROOT / "GBIF_Data_set.csv"
 
     class PlantExpertVQA:
@@ -43,7 +43,7 @@ class Data:
         TEST_FILE= DATA / "test.csv"
         VALIDATION_FILE= DATA / "val.csv"
 
-        TEXT_COLUMNS= ["question_text"]
+        TEXT_COLUMNS= ["question_text", "answer"]
         COLUMNS_TO_REMOVE= ["dataset_source"]
 
         NA_FILL= {
@@ -69,7 +69,7 @@ class Data:
         DATA= ROOT / "data"
         CSV= ROOT / "csv"
 
-        TEXT_COLUMNS= ["question"]
+        TEXT_COLUMNS= ["question", "answer", "A", "B", "C", "D"]
         COLUMNS_TO_REMOVE= []
         NA_FILL= {}
 

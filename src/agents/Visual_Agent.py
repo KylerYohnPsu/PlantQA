@@ -74,7 +74,7 @@ class VisualModel:
         paths = df["image_path"].astype(str).map(
             lambda p: p if p.startswith("/") else f"{root}\{p}"
         ).to_numpy() # add image path for deduping later
-
+        
         def load_plant_image(path, label):
             def preprocess_image(image_path):
                 image_path = image_path.decode("utf-8")
@@ -176,7 +176,7 @@ class VisualModel:
             classification_heads = out
         )
 
-    def unfreeze_layers(self, n_layers=30, lr=1e-5):
+    def unfreeze_layers(self, n_layers=120, lr=1e-5):
         base = next(layer for layer in self.model.layers if isinstance(layer, keras.Model))
         base.trainable = True
         for layer in base.layers[:-n_layers]:

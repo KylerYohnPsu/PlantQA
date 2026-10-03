@@ -3,6 +3,7 @@ Put code for exploring image data here
 """
 import matplotlib.pyplot as plt
 import numpy as np
+import cv2
 
 import src.data_preprocessing.image_preprocessing as img_pre
 import src.data_preprocessing.segmentation as seg
@@ -77,3 +78,15 @@ def show_cropped_and_mask(data, images_root, count: int = 3, size: tuple = (224,
 
     figure.suptitle("Cropped image and its mask channels")
     plt.show()
+
+
+def get_image_size(file):
+    im = cv2.imread(file)
+    if im is not None:
+        h, w, s = im.shape
+        return h, w, s
+
+    return None, None, None
+
+def get_variance_of_laplacian(image):
+    return cv2.Laplacian(image, cv2.CV_64F).var()

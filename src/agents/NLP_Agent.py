@@ -11,7 +11,7 @@ Steps to Agent
 
 import agents.util.ResponseModel as ResponseModel
 import agents.util.Retriever as Retriever
-import agents.Visual_Agent as Visual_Agent
+import Visual_Agent as Visual_Agent
 
 class NLPAgent:
     def __init__(self, retriever, response_model, visual_model):
