@@ -16,7 +16,7 @@ class Logging:
 
     COLORS = {
         "DEBUG": "cyan",
-        "INFO": "black",
+        "INFO": "green",
         "WARNING": "yellow",
         "ERROR": "red",
         "CRITICAL": "bold_red",
