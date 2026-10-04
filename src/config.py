@@ -32,7 +32,7 @@ class Data:
         TEST_FILE= ROOT / "test_df.csv"
         VALIDATION_FILE= ROOT / "val_df.csv"
         FULL_FILE= ROOT / "GBIF_Data_set.csv"
-
+        IMAGES = General.DATA_DIR / 'GBIF_Pre_Processed'
     class PlantExpertVQA:
         """
         Config for PlantExpertVQA dataset management
@@ -68,6 +68,7 @@ class Data:
         ROOT= General.DATA_DIR / "PlantLeafLet"
         DATA= ROOT / "data"
         CSV= ROOT / "csv"
+        IMAGES = ROOT / 'images'
 
         TEXT_COLUMNS= ["question", "answer", "A", "B", "C", "D"]
         COLUMNS_TO_REMOVE= []
