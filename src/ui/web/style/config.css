@@ -1,0 +1,20 @@
+:root {
+    --bg1: #101a14;
+    --bg2: black;
+    --bg: linear-gradient(
+        to bottom,
+        var(--bg1) 0%,
+        var(--bg2) 100%
+    );
+    --bg-panel: #223027;
+    --bg-panel-box: #2B3A30; 
+    --text-header: #f1f5e4;
+    --text-panel: #f1f5e4;
+    --bg-button: #b3a05f;
+    --button-text: #f1f5e4;
+    --input-prompt-text: #f1f5e4;
+    --bg-input-area: var(--bg1);
+    --border: #3A4A3E;
+    --divider-color: var(--border);
+}
+

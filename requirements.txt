@@ -27,3 +27,7 @@ python-docx
 supabase
 anthropic
 bitsandbytes
+seaborn
+fastapi
+uvicorn
+python-multipart
