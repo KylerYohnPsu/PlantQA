@@ -65,12 +65,13 @@ function update_status_text(status) {
     if (!status_text)
         return;
 
+    status_text.style.fontSize= "clamp(3px, 2.5vw, 80px)";
+
     status_text.textContent= status.toUpperCase();
 
     switch (status.toLowerCase()) {
         case "ready": 
             status_text.style.color= "#07f045";
-            status_text.style.fontSize= "clamp(4px, 4vw, 100px)";
             break;
         case "processing":
             status_text.style.color= "yellow";
