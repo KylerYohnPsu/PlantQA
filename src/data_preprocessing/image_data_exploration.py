@@ -7,13 +7,12 @@ import cv2
 
 import src.data_preprocessing.image_preprocessing as img_pre
 import src.data_preprocessing.segmentation as seg
+from pathlib import Path
 
 
 def full_path(image_path, images_root):
-    image_path = str(image_path)
-    if image_path.startswith("/"):
-        return image_path
-    return f"{str(images_root).rstrip('/')}/{image_path}"
+    image_path = str(image_path).replace("\\", "/")
+    return str(Path(images_root) / image_path.lstrip("/"))
 
 
 def load_sample_image(data, plant_images_root, count, seed: int = 0):

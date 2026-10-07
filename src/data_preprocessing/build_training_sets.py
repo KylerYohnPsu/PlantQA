@@ -31,7 +31,7 @@ def generate_GBIF_CSV():
         for file in folder.iterdir():
         
             img_id = file.name.split(".")[0]
-            img_path = f"/{file.parts[-4:][0]}/{file.parts[-4:][1]}/{file.parts[-4:][2]}/{file.parts[-4:][3]}"
+            img_path = "/".join(file.parts[-4:])
             crop = record.get('scientific_name')
             family = record.get('family')
             genus = record.get('genus')

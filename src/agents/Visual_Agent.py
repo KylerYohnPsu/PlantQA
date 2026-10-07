@@ -82,9 +82,9 @@ class VisualModel:
             unknown = plant_index.get(VisualModel.add_unknown_label(names), len(names) - 1)
             labels[head] = df[head].astype(str).map(lambda v: plant_index.get(v, unknown)).to_numpy("int32")
 
-        root = str(raw_root).rstrip("/")
+        root = Path(raw_root)
         paths = df["image_path"].astype(str).map(
-            lambda p: p if p.startswith("/") else f"{root}\{p}"
+            lambda p: str(root / p.replace("\\", "/").lstrip("/"))
         ).to_numpy() # add image path for deduping later
         
         def load_plant_image(path, label):
