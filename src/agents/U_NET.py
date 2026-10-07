@@ -16,23 +16,23 @@ class UNET:
         self.model = None
 
 
-    def conv_block(inputs, num_filters):
-        x = tf.keras.layers.Conv2D(num_filters, 3, padding="same")(inputs)
-        x = tf.keras.layers.BatchNormalization()(x)
-        x = tf.keras.layers.LeakyReLU(alpha=0.01) (x)
+    def conv_block(self, inputs, num_filters):
+        x = keras.layers.Conv2D(num_filters, 3, padding="same")(inputs)
+        x = keras.layers.BatchNormalization()(x)
+        x = keras.layers.LeakyReLU(alpha=0.01) (x)
 
-        x = tf.keras.layers.Conv2D(num_filters, 3, padding="same")(inputs)
-        x = tf.keras.layers.BatchNormalization()(x)
-        x = tf.keras.layers.LeakyReLU(alpha=0.01) (x)
-
+        x = keras.layers.Conv2D(num_filters, 3, padding="same")(x)
+        x = keras.layers.BatchNormalization()(x)
+        x = keras.layers.LeakyReLU(alpha=0.01) (x)
+        return x
     def encoder_block(self, inputs, num_filters):
-        x = self.conv_block(inputs, num_filters=num_filters)(inputs)
-        p = tf.keras.layers.MaxPool2D((2,2)) (x)
+        x = self.conv_block(inputs, num_filters=num_filters)
+        p = keras.layers.MaxPool2D((2,2))(x)
         return x, p
 
     def decoder_block(self, inputs, skip, num_filters):
-        x = tf.keras.layers.Conv2DTranspose(num_filters, (2,2), strides=2, padding="same")
-        x - tf.keras.layers.Concatenate()([x, skip])
+        x = keras.layers.Conv2DTranspose(num_filters, (2,2), strides=2, padding="same")(inputs)
+        x = keras.layers.Concatenate()([x, skip])
         x = self.conv_block(x, num_filters=num_filters)
 
         return x
@@ -40,7 +40,7 @@ class UNET:
 
     def build_unet(self, input_shape):
 
-        inputs = tf.keras.layers.Input(input_shape)
+        inputs = keras.layers.Input(input_shape)
 
         s1, p1 = self.encoder_block(inputs, 64)
         s2, p2 = self.encoder_block(p1, 128)
@@ -54,12 +54,23 @@ class UNET:
         d2 = self.decoder_block(d3, s2, 128)
         d1 = self.decoder_block(d2, s1, 64)
 
-        outputs = tf.keras.layers.Conv2D(1, 1, padding="same", activation="sigmoid")(d1)
-        model = tf.keras.models.Model(inputs, outputs, name = "UNET")
+        outputs = keras.layers.Conv2D(1, 1, padding="same", activation="sigmoid", dtype = 'float32')(d1)
+        model = keras.models.Model(inputs, outputs, name = "UNET")
         self.model =model
 
     def compile(self, lr=1e-3):
         self.model.compile(optimizer=keras.optimizers.Adam(lr),
-                           loss=keras.losses.BinaryFocalCrossentropy())
+                           loss=keras.losses.BinaryFocalCrossentropy(apply_class_balancing=True),
+                           metrics=[keras.metrics.BinaryIoU(target_class_ids=[1], threshold=0.5, name='iou')])
+
+    def fit(self, train_ds, val_ds, epochs=20):
+            calls = [
+                keras.callbacks.EarlyStopping("iou", patience=4, mode="max",
+                                              restore_best_weights=True),
+                keras.callbacks.ModelCheckpoint("best.keras", monitor="iou",
+                                                mode="max", save_best_only=True),
+            ]
+            return self.model.fit(train_ds, validation_data=val_ds,
+                                  epochs=epochs, callbacks=calls)
 
 
