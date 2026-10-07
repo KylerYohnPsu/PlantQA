@@ -9,7 +9,8 @@ def generate_GBIF_CSV():
     #Get the Path for the Pre_Processed Images
     PATH_TO_CONVERTED_GBIF = Path(__file__).parent.parent.parent / 'data' / 'GBIF_Pre_Processed' 
     
-    MAIN_DATA = pd.DataFrame(columns=["image_id", "image_path", "group", "family", "genus", "crop", "disease", "category", "severity"])
+    MAIN_DATA = pd.DataFrame(columns=["image_id", "image_path", "symbol", "group", "family", "genus", "crop", "disease", "category", "severity"])
+
     #Loop Through each and assign at random an image to Test, an image to Train, and an image to Validation
     #70% of images to Train
     #10% to validation
@@ -34,12 +35,13 @@ def generate_GBIF_CSV():
             crop = record.get('scientific_name')
             family = record.get('family')
             genus = record.get('genus')
+            symbol = record.get('symbol')
             group = record.get('group')
             ##Revist this -- Is there a way to diagnose the plants or generate a bool for disease presence and severity? -- Would unknown be better 
             disease = 'healthy'
             category = 'healthy'
             severity = 'healthy'
-            MAIN_DATA.loc[len(MAIN_DATA)] = [img_id, img_path, group, family, genus, crop, disease, category, severity]
+            MAIN_DATA.loc[len(MAIN_DATA)] = [img_id, img_path, symbol, group, family, genus, crop, disease, category, severity]
     
     project_root = Path(__file__).resolve().parent.parent.parent
     project_root = project_root / "data" / "GBIF"/ "GBIF_Data_set.csv"

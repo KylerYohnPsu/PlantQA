@@ -13,8 +13,8 @@ class ResponseModel:
         self.model = self.build_model(model_name, lora = lora, adapter = adapter)
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    def generate_answer(self, question, chunks, max_tokens = 220):
-        prompt = self.build_prompt(question, chunks)
+    def generate_answer(self, question, chunks, max_tokens = 220, visual_predictions = None):
+        prompt = self.build_prompt(question, chunks, visual_predictions)
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
         with torch.no_grad():
             outputs = self.model.generate(**inputs, max_length = max_tokens)
@@ -43,9 +43,11 @@ class ResponseModel:
                 target_modules=["q_proj", "k_proj", "v_proj", "o_proj"]))
         return model
 
-    def build_prompt(self, question, chunks):
+    def build_prompt(self, question, chunks, visual_predictions = None):
         context = "\n".join(c["body"][:400] for c in chunks) if chunks else "(none)"
-        prompt = f"plant question:\nquestion:{question}\nretrieved context:\n{context}"
+        prompt = (f"plant question:\nquestion:{question}"
+                  f"\nretrieved context:\n{context}"
+                  f"\nvisual model's predictions:\n{visual_predictions or '(none)'}")
         return self.tokenizer.apply_chat_template(
             [{"role": "system", "content": SYSTEM_PROMPT},
              {"role": "user", "content": prompt}],
@@ -55,7 +57,7 @@ class ResponseModel:
         training_data = []
         for row in data.itertuples():
             chunks = retriever.retrieve(row.question_text) if retriever else None
-            prompt = self.build_prompt(question=row.question_text, chunks=chunks)
+            prompt = self.build_prompt(question=row.question_text, chunks=chunks, visual_predictions=f"{row.crop} + {row.disease} + {row.severity}")
             full = self.tokenizer(prompt + row.answer + self.tokenizer.eos_token)["input_ids"]
             n = len(self.tokenizer(prompt)["input_ids"])
             training_data.append({"input_ids": full, "labels": [-100] * n + full[n:]})
