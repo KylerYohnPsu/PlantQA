@@ -18,7 +18,19 @@ class VisualPrediction:
     top_k_results: List[Tuple[str, float]]
     classification_heads: Dict[str, List[Tuple[str, float]]]
 
+    def get_observations(self, heads=("crop", "disease", "severity")):
+        return ", ".join(self.classification_heads[head][0][0]
+                         for head in heads if head in self.classification_heads)
 
+    def get_genus(self):
+        values = self.classification_heads.get("genus")
+        genus = values[0][0] if values else None
+        return None if genus == "unknown" else genus
+
+    def get_plant_code(self):
+        values = self.classification_heads.get("symbol")
+        code = values[0][0] if values else None
+        return None if code == "unknown" else code
 
 class VisualModel:
     def __init__(self, classes: Dict[str, List[str]],
@@ -70,9 +82,9 @@ class VisualModel:
             unknown = plant_index.get(VisualModel.add_unknown_label(names), len(names) - 1)
             labels[head] = df[head].astype(str).map(lambda v: plant_index.get(v, unknown)).to_numpy("int32")
 
-        root = str(raw_root).rstrip("/")
+        root = Path(raw_root)
         paths = df["image_path"].astype(str).map(
-            lambda p: p if p.startswith("/") else f"{root}\{p}"
+            lambda p: str(root / p.replace("\\", "/").lstrip("/"))
         ).to_numpy() # add image path for deduping later
         
         def load_plant_image(path, label):
