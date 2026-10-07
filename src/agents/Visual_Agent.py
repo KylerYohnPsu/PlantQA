@@ -167,13 +167,14 @@ class VisualModel:
                               epochs=epochs, callbacks=calls)
 
     def predict(self, image: np.ndarray, k: int = 3) -> VisualPrediction:
+        cropped = img_pre.crop_border(seg.to_rgb_uint8(image))
+        resized = img_pre.resize_image(cropped, self.img_size)
         if self.use_mask:
-            resized = img_pre.resize_image(seg.to_rgb_uint8(image), self.img_size)
             mask = seg.make_mask(resized, self.img_size).astype(np.float32) / 255.0
             model_input = {"image": np.expand_dims(resized.astype(np.float32), 0),
                            "mask": np.expand_dims(mask, 0)}
         else:
-            model_input = np.expand_dims(image, 0)
+            model_input = np.expand_dims(resized.astype(np.float32), 0)
 
         predictions = self.model.predict(model_input, verbose=0)
         out = {}
