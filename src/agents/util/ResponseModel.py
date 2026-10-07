@@ -4,6 +4,7 @@ from peft import (LoraConfig, PeftModel, get_peft_model,
                   prepare_model_for_kbit_training)
 import bitsandbytes
 import torch
+
 SYSTEM_PROMPT = ("You are a plant expert. You are to use the referenced chunks provided in the user input"
                 " to help users with their questions. If the chunks are not relevant, do not use them. Do not invent facts")
 class ResponseModel:
@@ -50,20 +51,19 @@ class ResponseModel:
              {"role": "user", "content": prompt}],
             tokenize=False, add_generation_prompt=True)
 
+    def build_training_data(self, data, retriever = None):
+        training_data = []
+        for row in data.itertuples():
+            chunks = retriever.retrieve(row.question_text) if retriever else None
+            prompt = self.build_prompt(question=row.question_text, chunks=chunks)
+            full = self.tokenizer(prompt + row.answer + self.tokenizer.eos_token)["input_ids"]
+            n = len(self.tokenizer(prompt)["input_ids"])
+            training_data.append({"input_ids": full, "labels": [-100] * n + full[n:]})
+        return training_data
 
     def train_model(self, data, retriever=None, epochs=1, num_results=None,
                     out="./models/response_models/qwen_lora"):
-
-        rows = data.head(num_results) if num_results else data
-        training_data = []
-        for row in rows.itertuples():
-            chunks = retriever.retrieve(row.question_text) if retriever else None
-            prompt = self.build_prompt(question= row.question_text, chunks=chunks)
-            full = self.tokenizer(prompt + row.answer + self.tokenizer.eos_token)["input_ids"]
-            n = len(self.tokenizer(prompt)["input_ids"])
-            training_data.append({"input_ids": full,
-                             "labels": [-100] * n + full[n:]})
-
+        training_data = self.build_training_data(data, retriever)
         Trainer(
             model=self.model,
             args=TrainingArguments(

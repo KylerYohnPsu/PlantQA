@@ -18,6 +18,9 @@ class VisualPrediction:
     top_k_results: List[Tuple[str, float]]
     classification_heads: Dict[str, List[Tuple[str, float]]]
 
+    def get_observations(self, heads=("crop", "disease", "severity")):
+        return ", ".join(self.classification_heads[head][0][0]
+                         for head in heads if head in self.classification_heads)
 
 
 class VisualModel:
