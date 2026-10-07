@@ -22,6 +22,15 @@ class VisualPrediction:
         return ", ".join(self.classification_heads[head][0][0]
                          for head in heads if head in self.classification_heads)
 
+    def get_genus(self):
+        values = self.classification_heads.get("genus")
+        genus = values[0][0] if values else None
+        return None if genus == "unknown" else genus
+
+    def get_plant_code(self):
+        values = self.classification_heads.get("symbol")
+        code = values[0][0] if values else None
+        return None if code == "unknown" else code
 
 class VisualModel:
     def __init__(self, classes: Dict[str, List[str]],

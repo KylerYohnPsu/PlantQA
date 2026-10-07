@@ -57,9 +57,9 @@ class ResponseModel:
         training_data = []
         for row in data.itertuples():
             chunks = retriever.retrieve(row.question_text) if retriever else None
-            prompt = self.build_prompt(question=row.question_text, chunks=chunks, visual_predictions=f"{row.crop} + {row.disease} + {row.severity}")
+            prompt = self.build_prompt(question=row.question_text, chunks=chunks, visual_predictions=f"{row.crop}, {row.disease}, {row.severity}")
             full = self.tokenizer(prompt + row.answer + self.tokenizer.eos_token)["input_ids"]
-            n = len(self.tokenizer(prompt)["input_ids"])
+            n = len(self.tokenizer(prompt, truncation=True, max_length=1024)["input_ids"])
             training_data.append({"input_ids": full, "labels": [-100] * n + full[n:]})
         return training_data
 
