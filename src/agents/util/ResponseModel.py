@@ -17,7 +17,7 @@ class ResponseModel:
         prompt = self.build_prompt(question, chunks, visual_predictions)
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
         with torch.no_grad():
-            outputs = self.model.generate(**inputs, max_length = max_tokens)
+            outputs = self.model.generate(**inputs, max_new_tokens = max_tokens)
         completion = outputs[0][inputs["input_ids"].shape[1]:]
         return self.tokenizer.decode(completion, skip_special_tokens=True).strip()
 
@@ -58,9 +58,10 @@ class ResponseModel:
         for row in data.itertuples():
             chunks = retriever.retrieve(row.question_text) if retriever else None
             prompt = self.build_prompt(question=row.question_text, chunks=chunks, visual_predictions=f"{row.crop}, {row.disease}, {row.severity}")
-            full = self.tokenizer(prompt + row.answer + self.tokenizer.eos_token)["input_ids"]
-            n = len(self.tokenizer(prompt, truncation=True, max_length=1024)["input_ids"])
-            training_data.append({"input_ids": full, "labels": [-100] * n + full[n:]})
+
+            prompt_ids = self.tokenizer(prompt, truncation= True, max_len=1024)["input_ids"]
+            answer_ids = self.tokenizer(row.answer, truncation= True, max_len=1024)["input_ids"]
+            training_data.append({"input_ids": prompt_ids + answer_ids, "labels": [-100] * len(prompt_ids) + answer_ids})
         return training_data
 
     def train_model(self, data, retriever=None, epochs=1, num_results=None,
@@ -71,7 +72,8 @@ class ResponseModel:
             args=TrainingArguments(
                 out, per_device_train_batch_size=1, gradient_accumulation_steps=16,
                 num_train_epochs=epochs, learning_rate=2e-4, bf16=True,
-                gradient_checkpointing=True, optim="paged_adamw_8bit", report_to=[]),
+                gradient_checkpointing=True, optim="paged_adamw_8bit", report_to=[]
+            ),
             train_dataset=training_data,
             data_collator=lambda b: {k: torch.tensor([v]) for k, v in b[0].items()},
         ).train()

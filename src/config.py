@@ -43,7 +43,7 @@ class Data:
         TEST_FILE= DATA / "test.csv"
         VALIDATION_FILE= DATA / "val.csv"
 
-        TEXT_COLUMNS= ["question_text", "answer"]
+        TEXT_COLUMNS= []#["question_text", "answer"]
         COLUMNS_TO_REMOVE= ["dataset_source"]
 
         NA_FILL= {
