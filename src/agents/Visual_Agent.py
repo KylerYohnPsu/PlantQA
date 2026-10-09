@@ -34,11 +34,14 @@ class VisualPrediction:
 
 class VisualModel:
     def __init__(self, classes: Dict[str, List[str]],
-                 img_size=(224, 224), weights="imagenet", use_mask=False):
+                 img_size=(224, 224), weights="imagenet",
+                 dropout = .3, loss_weights = None, use_mask=False):
         self.classes = classes
         self.img_size = img_size
         self.weights = weights
         self.use_mask = use_mask
+        self.dropout = dropout
+        self.loss_weights = loss_weights
         self.model = None
 
     @staticmethod
@@ -128,7 +131,7 @@ class VisualModel:
         image_input = keras.Input(shape=(*self.img_size, 3), name="image")
         #x = layers.Resizing(*self.img_size)(image_input)
         x = base(image_input)
-        x = layers.Dropout(0.3)(x)
+        x = layers.Dropout(self.dropout)(x)
 
         inputs = image_input
         if self.use_mask: #adding a masked channel if there is one being used
@@ -144,7 +147,7 @@ class VisualModel:
             inputs = [image_input, mask_input]
             x = layers.Concatenate()([x, m])
 
-        outputs = [layers.Dense(len(names), activation = "softmax", name = head)(x) for head, names in self.classes.items()]
+        outputs = [layers.Dense(len(names), activation = "softmax", name = head, dtype="float32")(x) for head, names in self.classes.items()]
 
         self.model = keras.Model(inputs, outputs, name="plantqa_visual")
         return self.model
@@ -153,18 +156,26 @@ class VisualModel:
         self.model.compile(
             optimizer=keras.optimizers.Adam(lr),
             loss={h: "sparse_categorical_crossentropy" for h in self.classes},
+            loss_weights = self.loss_weights,
             metrics={h: ["accuracy"] for h in self.classes},
         )
 
-    def fit(self, train_ds, val_ds, epochs=20):
+    def fit(self, train_ds, val_ds, epochs=20, checkpoint_model = "best.keras"):
         calls = [
-            keras.callbacks.EarlyStopping("val_crop_accuracy", patience=4, mode="max",
-                                          restore_best_weights=True),
-            keras.callbacks.ModelCheckpoint("best.keras", monitor="val_crop_accuracy",
-                                            mode="max", save_best_only=True),
+            keras.callbacks.EarlyStopping(
+                "val_crop_accuracy",
+                patience=4,
+                mode="max",
+                restore_best_weights=True
+            ),
+            keras.callbacks.ModelCheckpoint(
+                checkpoint_model,
+                monitor="val_crop_accuracy",
+                mode="max",
+                save_best_only=True
+            ),
         ]
-        return self.model.fit(train_ds, validation_data=val_ds,
-                              epochs=epochs, callbacks=calls)
+        return self.model.fit(train_ds, validation_data=val_ds,epochs=epochs, callbacks=calls)
 
     def predict(self, image: np.ndarray, k: int = 3) -> VisualPrediction:
         cropped = img_pre.crop_border(seg.to_rgb_uint8(image))
