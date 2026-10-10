@@ -33,6 +33,7 @@ class Data:
         VALIDATION_FILE= ROOT / "val_df.csv"
         FULL_FILE= ROOT / "GBIF_Data_set.csv"
         IMAGES = General.DATA_DIR / 'GBIF_Pre_Processed'
+        SEGMENTED = General.DATA_DIR / 'GBIF_Segmented'
     class PlantExpertVQA:
         """
         Config for PlantExpertVQA dataset management

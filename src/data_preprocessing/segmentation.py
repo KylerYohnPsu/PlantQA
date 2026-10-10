@@ -70,3 +70,43 @@ def k_means(image, k: int):
 
     return segmented_image
 
+
+def get_percent_of_Disease(img_path, mask_path):
+    img = cv2.imread(str(img_path))
+    mask = cv2.imread(str(mask_path), cv2.IMREAD_GRAYSCALE)
+
+    img = cv2.resize(img, (384,384))
+    mask = (mask > 0).astype(np.uint8) * 255
+    vals, counts = np.unique_counts(mask)
+    gray_Image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    blurred = cv2.GaussianBlur(gray_Image, (5,5),0)
+    _, threshold = cv2.threshold(blurred, 150, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
+    #find contours
+
+    contours, hierarchy = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    filled_mask = np.zeros_like(gray_Image)
+
+    cv2.drawContours(image=filled_mask, contours=contours, contourIdx=-1, color=(255,255,255), thickness=cv2.FILLED)
+
+    if contours:
+        area = 0
+        for cont in contours:
+            area += cv2.contourArea(cont)
+    else:
+        return ('Unknown', 'UNKNOWN')
+    pct_diseased = (counts[1] / area) * 100
+
+    if pct_diseased < 15:
+        return ('healthy', 'HEALTHY')
+    elif  pct_diseased < 40:
+        return('disease', 'MILD')
+    elif  pct_diseased < 75:
+        return('disease', 'MODERATE')
+    elif  pct_diseased < 100:
+        return('disease', 'SEVERE')
+    else:
+        return('disease', 'UNKNOWN')
+

@@ -1,0 +1,2 @@
+symbol,img_id,img_path,mask_path,disease,severity
+ABAM,ABAM_0,data/GBIF_Pre_Processed/ABAM/ABAM_0.jpg,data/GBIF_Segmented/ABAM/ABAM_0.png,healthy,HEALTHY
