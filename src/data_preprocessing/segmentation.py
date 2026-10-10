@@ -93,9 +93,10 @@ def get_percent_of_Disease(img_path, mask_path):
     img = cv2.imread(str(img_path))
     mask = cv2.imread(str(mask_path), cv2.IMREAD_GRAYSCALE)
 
-    img = cv2.resize(img, (384,384))
+    img = img_pre.crop_border(img)
+    img = cv2.resize(img, (384, 384))
     mask = (mask > 0).astype(np.uint8) * 255
-    vals, counts = np.unique_counts(mask)
+    lesion_pixels = int(np.count_nonzero(mask))
     gray_Image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     blurred = cv2.GaussianBlur(gray_Image, (5,5),0)
@@ -115,7 +116,7 @@ def get_percent_of_Disease(img_path, mask_path):
             area += cv2.contourArea(cont)
     else:
         return ('Unknown', 'UNKNOWN')
-    pct_diseased = (counts[1] / area) * 100
+    pct_diseased = (lesion_pixels / area) * 100
 
     if pct_diseased < 15:
         return ('healthy', 'HEALTHY')
