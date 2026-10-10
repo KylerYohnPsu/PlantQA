@@ -79,7 +79,7 @@ def show_cropped_and_mask(data, images_root, count: int = 3, size: tuple = (224,
 
     for row, image in zip(np.atleast_2d(axes), images):
         cropped = img_pre.resize_image(img_pre.crop_border(image), size)
-        mask = seg.make_mask(cropped, size)
+        mask = seg.mask_channels(cropped, None, size)
 
         for ax, panel, title in zip(row, [cropped, mask[:, :, 0], mask[:, :, 1]], titles):
             ax.imshow(panel, cmap=None if title == "cropped" else "gray")
@@ -98,7 +98,7 @@ def show_cropped_and_mask_by_ID(data, images_root, count: int = 3, size: tuple =
 
     for row, image in zip(np.atleast_2d(axes), images):
         cropped = img_pre.resize_image(img_pre.crop_border(image), size)
-        mask = seg.make_mask(cropped, size)
+        mask = seg.mask_channels(cropped, None, size)
    #mask[:, :, 0], 
         for ax, panel, title in zip(row, [cropped, mask[:, :, 1]], titles):
             ax.imshow(panel, cmap=None if title == "cropped" else "gray")

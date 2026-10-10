@@ -35,7 +35,7 @@ class VisualPrediction:
 class VisualModel:
     def __init__(self, classes: Dict[str, List[str]],
                  img_size=(224, 224), weights="imagenet",
-                 dropout = .3, loss_weights = None, use_mask=False):
+                 dropout = .3, loss_weights = None, use_mask=False, unet = None):
         self.classes = classes
         self.img_size = img_size
         self.weights = weights
@@ -43,6 +43,7 @@ class VisualModel:
         self.dropout = dropout
         self.loss_weights = loss_weights
         self.model = None
+        self.unet = unet
 
     @staticmethod
     def add_unknown_label(values):
@@ -61,8 +62,6 @@ class VisualModel:
 
         if "disease" in images:
             healthy = images["disease"] == "healthy"
-            if "category" in images:
-                images.loc[healthy, "category"] = "healthy"
             if "severity" in images:
                 images.loc[healthy, "severity"] = "HEALTHY"
         return images
@@ -178,14 +177,15 @@ class VisualModel:
         return self.model.fit(train_ds, validation_data=val_ds,epochs=epochs, callbacks=calls)
 
     def predict(self, image: np.ndarray, k: int = 3) -> VisualPrediction:
-        cropped = img_pre.crop_border(seg.to_rgb_uint8(image))
-        resized = img_pre.resize_image(cropped, self.img_size)
+        cropped_image = img_pre.crop_border(seg.to_rgb_uint8(image))
+        resized_image = img_pre.resize_image(cropped_image, self.img_size)
         if self.use_mask:
-            mask = seg.make_mask(resized, self.img_size).astype(np.float32) / 255.0
-            model_input = {"image": np.expand_dims(resized.astype(np.float32), 0),
-                           "mask": np.expand_dims(mask, 0)}
+            masked_image = seg.unet_mask_from_image(self.unet, cropped_image, self.img_size)
+            masked_channels = seg.mask_channels(cropped_image, masked_image, self.img_size)
+            model_input = {"image": np.expand_dims(resized_image.astype(np.float32), 0),
+                           "mask": np.expand_dims(masked_channels, 0)}
         else:
-            model_input = np.expand_dims(resized.astype(np.float32), 0)
+            model_input = np.expand_dims(resized_image.astype(np.float32), 0)
 
         predictions = self.model.predict(model_input, verbose=0)
         out = {}
@@ -214,14 +214,13 @@ class VisualModel:
         self.model.save(path)
 
     @classmethod
-    def load(cls, model_path, classes_path=None, img_size=(224, 224)) -> "VisualModel":
-        classes_path = Path(classes_path) if classes_path else cls.classes_path_for(model_path)
+    def load(cls, model_path, classes_path=None, img_size=(224, 224), unet = None) -> "VisualModel":
+        classes_path = Path(classes_path)
         saved_classes = json.loads(Path(classes_path).read_text())
 
-        visual_model = cls(classes=saved_classes, img_size=img_size)
+        visual_model = cls(classes=saved_classes, img_size=img_size, unet=unet)
         visual_model.model = keras.models.load_model(model_path)
         visual_model.use_mask = len(visual_model.model.inputs) > 1
-
         for c_head, names in saved_classes.items():
             number_out = visual_model.model.get_layer(c_head).output.shape[-1]
             if number_out != len(names):
