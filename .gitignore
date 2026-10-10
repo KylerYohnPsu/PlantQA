@@ -11,3 +11,4 @@ data/*
 .env.local
 *.env
 /best.keras
+/models/
