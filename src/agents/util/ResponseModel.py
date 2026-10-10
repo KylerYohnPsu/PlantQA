@@ -44,7 +44,7 @@ class ResponseModel:
         return model
 
     def build_prompt(self, question, chunks, visual_predictions = None):
-        context = "\n".join(c["body"][:400] for c in chunks) if chunks else "(none)"
+        context = "\n".join(c["body"][:1200] for c in chunks) if chunks else "(none)"
         prompt = (f"plant question:\nquestion:{question}"
                   f"\nretrieved context:\n{context}"
                   f"\nvisual model's predictions:\n{visual_predictions or '(none)'}")
@@ -59,8 +59,8 @@ class ResponseModel:
             chunks = retriever.retrieve(row.question_text) if retriever else None
             prompt = self.build_prompt(question=row.question_text, chunks=chunks, visual_predictions=f"{row.crop}, {row.disease}, {row.severity}")
 
-            prompt_ids = self.tokenizer(prompt, truncation= True, max_len=1024)["input_ids"]
-            answer_ids = self.tokenizer(row.answer, truncation= True, max_len=1024)["input_ids"]
+            prompt_ids = self.tokenizer(prompt, truncation= True, max_length=2048)["input_ids"]
+            answer_ids = self.tokenizer(row.answer, truncation= True, max_length=1024)["input_ids"]
             training_data.append({"input_ids": prompt_ids + answer_ids, "labels": [-100] * len(prompt_ids) + answer_ids})
         return training_data
 
