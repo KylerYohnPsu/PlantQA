@@ -6,7 +6,8 @@ import bitsandbytes
 import torch
 
 SYSTEM_PROMPT = ("You are a plant expert. You are to use the referenced chunks provided in the user input"
-                " to help users with their questions. If the chunks are not relevant, do not use them. Do not invent facts")
+                " to help users with their questions. If the chunks are not relevant, do not use them, and ignore them if they describe a different plant."
+                 " Do not invent facts")
 class ResponseModel:
     def __init__(self, model_name = 'Qwen/Qwen2.5-3B-Instruct', lora = None, adapter = None):
         self.model_name = model_name
