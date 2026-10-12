@@ -1,0 +1,62 @@
+#menu-bar {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 190px;
+    background: var(--side-bar-bg);
+    border-right: 1px solid var(--border);
+    padding:6px;
+    padding-top: 24px;
+    gap: 6px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 20px 14px;
+    color: var(--text-panel);
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+    font-size: clamp(20px, 1.2vw, 30px);
+}
+
+.nav-item:hover {
+    background: var(--bg-panel-box);
+}
+
+.nav-item.active {
+    background: var(--bg-panel-box);
+}
+
+.nav-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 clamp(20px, 1.2vw, 26px);
+    width: clamp(20px, 1.2vw, 26px);
+    height: clamp(20px, 1.2vw, 26px);
+}
+
+#bar-plant {
+    width: 180px;
+    aspect-ratio: 1 / 1;
+    flex-shrink: 0;
+    margin-top: auto;
+
+    background: linear-gradient(
+        to bottom,
+        #54734c 0%,
+        black 100%
+    );
+
+    -webkit-mask: url("../images/whiteplant.png") center / contain no-repeat;
+    mask: url("../images/whiteplant.png") center / contain no-repeat;
+}

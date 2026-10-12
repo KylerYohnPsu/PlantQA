@@ -11,93 +11,130 @@
 <body>
 
     <div id="header" class="section header">
+        <!--<img id="leaf-icon" src="images/free-leaf-icon-1531-thumb.png"> -->
         <div id="header-title" class="title">
             PlantQA
         </div>
+        <div id="header-vert-divider" class="vertical-divider"></div>
+        <div id="header-subtitle">We all grow together.</div>
     </div>
 
+    <div id="header-divider" class="horizontal-divider"></div>
+    
+    <div id="layout">
+        <aside id="menu-bar">
+            <button class="nav-item active" data-page="home-page">
+                <span class="nav-icon">⌂</span>
+                <span>Home</span>
+            </button>
 
+            <button class="nav-item" data-page="history-page">
+                <span class="nav-icon">◷</span>
+                <span>History</span>
+            </button>
 
-    <div id="main" class="section main">
+            <div id="bar-plant"></div>
+        </aside>
 
-        <div id="main-left" class="main-subsection left">
-            <div id="image-panel" class="panel">
-                <input type="file" id="image-upload" accept="image/*">
-                <label for="image-upload" id="image-upload-content" class="image-upload-content">
-                    
-                    <svg class="image-icon" viewBox="0 0 24 24">
-                        <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
-                        <polyline points="3,17 9,11 13,15 16,12 21,17" fill="none" stroke="currentColor" stroke-width="2"/>
-                    </svg>
+        <div id="pages">
+            <section id="home-page" class="page active">
+                <div id="main" class="section main">
+                    <div id="main-left" class="main-subsection left">
+                        <div id="question-panel" class="panel">
+                            <div id="image-section">
+                                <div id="image-upload-labels">
+                                    <div id="image-upload-label" class="input-label"> 1. Upload a Plant Image</div>
+                                    <div id="image-upload-sub-label" class="input-sub-label">  Click to upload an image of a plant you would like ask a question about.</div>
+                                </div>
+                                <input type="file" id="image-upload" accept="image/*">
+                                <label for="image-upload" id="image-upload-content" class="image-upload-content">
+                                    
+                                    <svg class="image-icon" viewBox="0 0 24 24">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+                                        <polyline points="3,17 9,11 13,15 16,12 21,17" fill="none" stroke="currentColor" stroke-width="2"/>
+                                    </svg>
 
-                    <div class="upload-text">Click to upload image</div>
-                </label>
-                <label for="image-upload" id="image-preview-container">
-                    <img id="image-preview" alt="Uploaded image">
-                </label>
-                
-            </div>
+                                    <div class="upload-text">Click to upload image</div>
+                                </label>
+                                <label for="image-upload" id="image-preview-container">
+                                    <img id="image-preview" alt="Uploaded image">
+                                </label>
+                            </div>
 
+                            <div id="input-panel-divider" class="horizontal-divider"></div>
 
-            <div id="question-panel" class="panel">
-                <input type="text" id="question-input" class="text-input" placeholder="What disease is being shown in this image?">
-                <button id="prompt-button" type="button">
-                    Ask Question
-                </button>
-        
-            </div>
+                            <div id="question-section">
+                                <div id="text-input-labels">
+                                    <div id="question-upload-label" class="input-label">2. Ask a Question</div>
+                                    <div id="question-upload-sub-label" class="input-sub-label">What would you like to know about the image?</div>
+                                </div>
+                                <input type="text" id="question-input" class="text-input" placeholder="e.g. What disease is being shown in this image?">
+                                <button id="prompt-button" type="button">
+                                    Ask Question
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div id="main-right" class="main-subsection right">
+                        <div id="answer-panel" class="panel">
+                            <div id="answer-title-section">
+                                <div id="answer-title">Answer</div>
+                                <div id="status-container">
+                                    <div id="status-light"></div>
+                                    <div id="status-text">DISCONNECTED</div>
+                                </div>
+                            </div>
+                            <div class="horizontal-divider answer-panel-divider"></div>
+                            <div id="answer-display" >
+                                <div id="answer-placeholder">
+                                    <img id="leaves-icon" src="images/leaves2.png">
+                                    <div id="answer-placeholder-text">
+                                        <div id="answer-placeholder-label">Upload an Image and Ask a Question</div>
+                                        <div id="answer-placeholder-sublabel">PlantQA can identify species, diagnose diseases, and provide care instructions!</div>
+                                    </div>
+                                </div>
+                                <div id="answer"></div>
+                            </div>
+                            <div id="answer-statistics-title-section">
+                                <div id="answer-statistics-title">Answer Metadata</div>
+                            </div>
+                            <div class="horizontal-divider answer-panel-divider"></div>
+                            <div id="answer-statistics-display">
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="history-page" class="page">
+                <div id="history-container">
+                    <table id="history-table">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Question</th>
+                                <th>Answer</th>
+                                <th>Confidence</th>
+                                <th>ID</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-contents">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
-
-        <div id="main-right" class="main-subsection right">
-            <div id="answer-panel" class="panel">
-                <div id="answer-display" class="panel-subsection">
-
-                </div>
-            </div>
-            <div id="info-panel" class="panel">
-                <div id="confidence-display" class="panel-box">
-                    <div class="panel-box-header">
-                        Confidence
-                    </div>
-                    <div class="horizontal-divider"></div>
-                    <div id="confidence" class="panel-box-main">
-                        --
-                    </div>
-                </div>
-                <div id="misc1-display" class="panel-box">
-                    <div class="panel-box-header">
-                        Misc
-                    </div>
-                    <div class="horizontal-divider"></div>
-                    <div id="a" class="panel-box-main">
-                        --
-                    </div>
-                </div>
-                <div id="status-display" class="panel-box">
-                    <div class="panel-box-header">
-                        System Status
-                    </div>
-                    <div class="horizontal-divider"></div>
-                    <div id="status-text" class="panel-box-main">
-                        --
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
     </div>
 
-
-
-    <div id="footer" class="section footer">
-    </div>
-
-
-    <script src="scripts/fast_posting.js"></script>
-    <script src="scripts/fast_websockets.js"></script>
-    <script src="scripts/general.js"></script>
+    <script  type="module" src="scripts/fast_posting.js"></script>
+    <script  type="module" src="scripts/fast_websockets.js"></script>
+    <script  type="module" src="scripts/history.js"></script>
+    <script  type="module" src="scripts/general.js"></script>
+    <script  type="module" src="scripts/navigation.js"></script>
 
 </body>
 

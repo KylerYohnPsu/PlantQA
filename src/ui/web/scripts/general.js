@@ -1,3 +1,6 @@
+import {HISTORY} from "./history.js";
+import * as posting from "./fast_posting.js";
+
 document.addEventListener("DOMContentLoaded", initialize);
 
 function initialize() {
@@ -7,7 +10,7 @@ function initialize() {
     image_upload.addEventListener("change", upload_image);
     prompt_button.addEventListener("click", ask_question);
 
-    py_log("UI Initialized!")
+    posting.py_log("UI Initialized!")
 }
 
 function upload_image() {
@@ -26,13 +29,13 @@ function upload_image() {
     image_preview_container.style.display= "flex";
 }//_upload_image
 
-function get_question() {
+export function get_question() {
     const question_input= document.getElementById("question-input");
     const question= question_input.value;
     return question;
 }
 
-function get_image() {
+export function get_image() {
     const image_upload= document.getElementById("image-upload");
     const image= image_upload.files[0];
     return image
@@ -51,17 +54,16 @@ async function ask_question() {
         return;
     }
 
-    console.log("Question: ", question);
-    console.log("Image: ", image);
-
-    const response= await send_question_prompt(question, image);
-
-    console.log("VQA Job ID: ", response.job_id);
+    const response= await posting.send_question_prompt(question, image);
     
+    HISTORY.add(response.job_id, question, image);
+
+    posting.py_log(`Entry added to history for ID: ${response.job_id}`);
 }
 
-function update_status_text(status) {
+export function update_status_text(status) {
     const status_text= document.getElementById("status-text");
+    const status_light= document.getElementById("status-light");
     if (!status_text)
         return;
 
@@ -69,17 +71,49 @@ function update_status_text(status) {
 
     switch (status.toLowerCase()) {
         case "ready": 
-            status_text.style.color= "#07f045";
-            status_text.style.fontSize= "clamp(4px, 4vw, 100px)";
+            status_light.style.background= "#07f045";
+            status_light.style.boxShadow= "0 0 6px #07f045";
             break;
+        case "preprocessing":
         case "processing":
-            status_text.style.color= "yellow";
+            status_light.style.background= "yellow";
+            status_light.style.boxShadow= "0 0 6px yellow";
             break;
         case "error":
-            status_text.style.color= "red";
+            status_light.style.background= "red";
+            status_light.style.boxShadow= "0 0 6px red";
             break;
         default:
-            status_text.style.color= "white";
+            status_light.style.background= "white";
+            status_light.style.boxShadow= "0 0 6px white";
             break;
     }//switch
+}
+
+export function set_answer(new_answer) {
+    const placeholder= document.getElementById("answer-placeholder");
+    const answer= document.getElementById("answer");
+
+    placeholder.style.display= "none";
+    answer.textContent= ""
+    answer.style.display= "flex";
+
+    let char_index= 0;
+    const speed= 20;
+
+    function type_next_character() {
+        if (char_index < new_answer.length) {
+            answer.textContent+= new_answer[char_index];
+            char_index++;
+
+            setTimeout(type_next_character, speed);
+        }
+    }
+
+    type_next_character();
+}
+
+export function set_confidence(confidence) {
+    //const confidence_text= document.getElementById("confidence");
+
 }

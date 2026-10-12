@@ -1,0 +1,137 @@
+#question-panel {
+    display: flex;
+    flex: 2;
+    gap: 4px;
+}
+
+
+#image-section {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 24px 0 24px;
+}
+.image-upload-content {
+    color: var(--input-prompt-text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: var(--image-input-bg);
+    flex: 1;
+    border-radius: 12px;
+    min-height: 0;
+    width: 100%;
+    border: 2px dashed var(--image-input-border);
+    padding: 12px;
+}
+.upload-icon {
+    font-size: clamp(4px, 4vw, 100px);
+    line-height: 1;
+}
+.upload-text {
+    font-size: clamp(4px, 2vw, 50px);
+    margin-top: 10px;
+    padding: 12px;
+}
+
+#image-upload {
+    display: none;
+}
+#question-panel svg {
+    min-height: 0;
+    width: clamp(5px, 4vw, 100px);
+    height: clamp(5px, 4vw, 100px);
+}
+#image-preview {
+    object-fit: contain;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+#image-preview-container {
+    display: none;
+    width: 100%;
+    min-height: 0;
+    cursor: pointer;
+    position: relative;
+    flex: 1;
+}
+
+#input-panel-divider {
+    width: 60%;
+    align-self: center;
+    flex-shrink: 0;
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+#question-section {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    gap: 12px;
+    padding-bottom: 24px;
+    padding-left: 24px;
+    padding-right: 24px;
+
+}
+
+.text-input {
+    flex: 5;
+    
+    box-sizing: border-box;
+
+    background: var(--text-input-bg);
+    color: var(--input-prompt-text);
+    border: 1px solid var(--panel-border);
+
+    border-radius: 10px;
+
+    padding: 10px 15px;
+
+    font-family: inherit;
+    font-size: clamp(10px, 1.5vw, 24px);
+
+    outline: none;
+    min-height: 0;
+    width: 100%;
+}
+
+.text-input::placeholder {
+    color: var(--input-prompt-text);
+    opacity: 0.5;
+}
+
+.input-label {
+    flex: 1;
+    padding: 5px;
+    font-size: clamp(4px, 2vw, 30px);
+}
+.input-sub-label {
+    flex: 1;
+    font-size: clamp(4px, 1.5vw, 15px);
+    padding-bottom: 12px;
+    color: var(--input-sub-label-color);
+}
+
+#text-input-labels {
+    flex: 1;
+}
+
+#question-panel button {
+    color: var(--button-text);
+    background: var(--bg-button);
+    border-radius: 12px;
+    flex: 2;
+    min-height: 0;
+    width: 100%;
+    font-size: clamp(5px, 2vw, 40px);
+}

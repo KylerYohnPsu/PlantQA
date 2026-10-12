@@ -1,20 +1,37 @@
 :root {
-    --bg1: #101a14;
-    --bg2: black;
-    --bg: linear-gradient(
-        to bottom,
-        var(--bg1) 0%,
-        var(--bg2) 100%
-    );
-    --bg-panel: #223027;
+    --header-bg: #0c1916;
+    --main-bg: black;
+
+    --bg-panel: #0c1916;
     --bg-panel-box: #2B3A30; 
+    --panel-border: #1c2e1e;
+
+    --bg-other-row: #12261f;
+
+    --bg-button: #576e45;
+    --image-input-border: #27402a;
+    --image-input-bg: #0f1e1a;
+    --text-input-bg: #070f0d;
+
+    --bg-status-container: #162823;
+
+    --text-header-subtitle: #94ad8c;
+    --text-title: #b0cfa7;
     --text-header: #f1f5e4;
     --text-panel: #f1f5e4;
-    --bg-button: #b3a05f;
     --button-text: #f1f5e4;
     --input-prompt-text: #f1f5e4;
-    --bg-input-area: var(--bg1);
+    --input-sub-label-color: #8e968a;
+   
     --border: #3A4A3E;
     --divider-color: var(--border);
+
+    --side-bar-bg: linear-gradient(
+        to bottom,
+        #000000 0%,
+        var(--bg-panel) 20%,
+        #000000 100%
+    );
+
 }
 

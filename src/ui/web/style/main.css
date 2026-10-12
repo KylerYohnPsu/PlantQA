@@ -1,5 +1,9 @@
 @import url("config.css");
 @import url("layout.css");
+@import url("header.css");
 @import url("panels.css");
-@import url("image_upload.css");
-@import url("text_input.css");
+@import url("question_panel.css");
+@import url("answer_panel.css");
+@import url("side_bar.css");
+@import url("pages.css");
+@import url("history.css");

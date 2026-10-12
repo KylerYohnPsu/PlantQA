@@ -1,0 +1,110 @@
+#answer-panel {
+    flex: 4;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 0;
+    text-align: left;
+}
+
+#answer-statistics-title-section,
+#answer-title-section {
+    flex: 0 0 auto;
+    min-height: 0;
+    align-self: stretch;
+    text-align: left;
+    padding-top: 24px;
+    padding-left: 24px;
+    padding-right: 24px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#answer-statistics-title,
+#answer-title {
+    color: var(--answer-title);
+    font-size: clamp(4px, 2vw, 30px);
+    min-height: 0;
+    flex: 1;
+}
+
+.horizontal-divider.answer-panel-divider {
+    width: 95%;
+    align-self: center;
+    flex-shrink: 0;
+    margin-top: 0px;
+    margin-bottom: 12px;
+}
+
+#answer-statistics-display,
+#answer-display {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 0;
+    padding-bottom: 24px;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 12px;
+}
+
+#answer {
+    display: none;
+    flex: 1;
+}
+
+#answer-placeholder {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    align-items: center;
+    justify-content: flex-start;
+    padding-bottom: 24px;
+    padding-left: 24px;
+    padding-right: 24px;
+    gap: 12px;
+    text-align: center;
+}
+
+#leaves-icon {
+    object-fit: contain;
+    width: clamp(5px, 15vw, 200px);
+    height: clamp(5px, 15vw, 200px);
+}
+
+#answer-placeholder-label {
+    font-size: clamp(10px, 2vw, 30px);
+    color: var(--text-title);
+}
+#answer-placeholder-sublabel {
+    font-size: clamp(4px, 1.5vw, 15px);
+    padding-bottom: 12px;
+    color: var(--input-sub-label-color);
+}
+
+#status-container {
+    display: flex;
+    background: var(--bg-status-container);
+    color: var(--text-panel);
+    border-radius: 24px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 5px 10px 5px 10px;
+    border: 1px solid var(--border);
+}
+#status-light {
+    flex-shrink: 0;
+    width: clamp(1px, 0.7vw, 13px);
+    height: clamp(1px, 0.7vw, 13px);
+    background: red;
+    border-radius: 50%;
+    box-shadow: 0 0 6px red;
+
+}
+#status-text {
+    flex: 3;
+    font-size: clamp(4px, 1vw, 30px);
+}
