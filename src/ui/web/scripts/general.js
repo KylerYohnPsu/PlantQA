@@ -74,6 +74,9 @@ export function update_status_text(status) {
             status_light.style.background= "#07f045";
             status_light.style.boxShadow= "0 0 6px #07f045";
             break;
+        case "embedding":
+        case "generating":
+        case "predicting":
         case "preprocessing":
         case "processing":
             status_light.style.background= "yellow";

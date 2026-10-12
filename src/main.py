@@ -60,7 +60,7 @@ class PlantQA:
         self._visualModel= Visual_Agent.VisualModel(visual_weights, visual_json, unet=self._unet)
         Logger.info(f"Visual model initialized!")
         Logger.info(f"Prepping agent...")
-        self._agent= NLP_Agent.NLPAgent(retriever=self._retriever, response_model=self._responseModel, visual_model=self._visualModel)
+        self._agent= NLP_Agent.NLPAgent(retriever=self._retriever, response_model=self._responseModel, visual_model=self._visualModel, ui=self._displayAPI)
         Logger.info(f"Agent ready!")
 
     def launch_display(self, ip, port):
