@@ -23,7 +23,7 @@ class Logging:
         "INFO": "green",
         "WARNING": "yellow",
         "ERROR": "red",
-        "CRITICAL": "bold_red",
+        "CRITICAL": "purple",
     }
 
 class Data:

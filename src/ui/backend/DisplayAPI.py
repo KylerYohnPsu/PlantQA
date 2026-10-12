@@ -55,14 +55,14 @@ class DisplayAPI:
             daemon=True,
         )
         self._serverThread.start()
-        Logger.info(f"UI running at: http://127.0.0.1:8000/ui.html")
+        Logger.critical(f"UI running at: http://127.0.0.1:8000/ui.html")
     
     def stop(self):
         if self._server is None:
             Logger.info(f"Server does not exist, nothing to stop.")
             return
 
-        self._run= True
+        self._run= False
 
         Logger.info("Attempting to stop server...")
 
@@ -119,7 +119,7 @@ class DisplayAPI:
 
     def _dequeue(self, q: queue.Queue):
         try:
-            data= q.get(block=False)
+            data= q.get(block=False, timeout=0.1)
             return data
         except queue.Empty:
             return None
@@ -127,6 +127,12 @@ class DisplayAPI:
     def _initialize_queues(self):
         self._promptQueue= queue.Queue(maxsize=5)
         self._answerQueue= queue.Queue(maxsize=5)
+
+    def _get_answer(self):
+        try:
+            return self._dequeue(self._answerQueue)
+        except queue.Empty:
+            return None
 
     def _initialize_routes(self):
         @self.app.post("/log")
@@ -159,7 +165,9 @@ class DisplayAPI:
 
             try:
                 while self._run:
-                    answer= await asyncio.to_thread(self._answerQueue.get)
+                    answer= await asyncio.to_thread(self._get_answer)
+                    if answer is None:
+                        continue
                     await websocket.send_json(answer)
             except WebSocketDisconnect:
                 pass
