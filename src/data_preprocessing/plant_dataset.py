@@ -1,6 +1,7 @@
 from torch.utils.data import Dataset
 from PIL import Image
 import numpy as np
+import tensorflow as tf
 
 def get_img_pairs(img_dir, mask_dir):
     img_p, mask_p = [], []
@@ -13,26 +14,30 @@ def get_img_pairs(img_dir, mask_dir):
             print(f"No Mask for {img.name}")
     return img_p, mask_p
 
-class PlantDataset(Dataset):
-    def __init__(self, img_dir, mask_dir, img_size=(384,384)):
-        self.img_paths, self.mask_paths = get_img_pairs(img_dir, mask_dir)
-        self.img_size = img_size
+def load_and_preprocess_image(img_path, mask_path, img_size=(384,384)):
+    img = tf.io.read_file(img_path)
+    img = tf.image.decode_jpeg(img, channels=3)
+    img = tf.image.resize(img, img_size)
+    img = tf.cast(img, tf.float32) / 255.0
 
-    def __len__(self):
-        return len(self.img_paths)
+    mask = tf.io.read_file(mask_path)
+    mask = tf.image.decode_png(mask, channels=1)
+    mask = tf.image.resize(mask, img_size, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+    mask = tf.cast(mask, tf.float32)
+    mask = tf.cast(mask > 0, tf.float32)
+    return img, mask
 
-    def __getitem__(self, idx):
+def generate_dataset(img_dir, mask_dir, img_size=(384,384), batch_size=32):
+    img_paths, mask_paths = get_img_pairs(img_dir, mask_dir)
 
-        img = Image.open(self.img_paths[idx]).convert("RGB")
-        img = img.resize(self.img_size)
-        img_arr = np.array(img, dtype=np.float32) / 255.0
+    dataset = tf.data.Dataset.from_tensor_slices((img_paths, mask_paths))
 
-        mask = Image.open(self.mask_paths[idx]).convert("L")
-        mask = mask.resize(self.img_size, resample=Image.NEAREST)
-        mask_arr = np.array(mask, dtype=np.float32)
-        mask_arr = (mask_arr > 0).astype(np.float32)
-        mask_arr = np.expand_dims(mask_arr, axis=-1)
+    dataset = dataset.map(
+        lambda img, mask: load_and_preprocess_image(img, mask, img_size),
+        num_parallel_calls=tf.data.AUTOTUNE
+    )
 
-        img_arr = img_arr.transpose(2 , 0, 1)
-        mask_arr = mask_arr.transpose(2, 0, 1)
-        return img_arr, mask_arr
+    dataset = dataset.batch(batch_size)
+    dataset = dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
+
+    return dataset
