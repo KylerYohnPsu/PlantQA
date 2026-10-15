@@ -18,16 +18,34 @@ class VisualPrediction:
     top_k_results: List[Tuple[str, float]]
     classification_heads: Dict[str, List[Tuple[str, float]]]
 
+    def get_observations(self, heads=("crop", "disease", "severity")):
+        return ", ".join(self.classification_heads[head][0][0]
+                         for head in heads if head in self.classification_heads)
 
+    def get_genus(self, conf_level = .5):
+        values = self.classification_heads.get("genus")
+        if not values or values[0][1] < conf_level:
+            return None
+        return None if values[0][0] == "unknown" else values[0][0]
+
+    def get_plant_code(self, conf_level = .5):
+        values = self.classification_heads.get("symbol")
+        if not values or values[0][1] < conf_level:
+            return None
+        return None if values[0][0] == "unknown" else values[0][0]
 
 class VisualModel:
     def __init__(self, classes: Dict[str, List[str]],
-                 img_size=(224, 224), weights="imagenet", use_mask=False):
+                 img_size=(224, 224), weights="imagenet",
+                 dropout = .3, loss_weights = None, use_mask=False, unet = None):
         self.classes = classes
         self.img_size = img_size
         self.weights = weights
         self.use_mask = use_mask
+        self.dropout = dropout
+        self.loss_weights = loss_weights
         self.model = None
+        self.unet = unet
 
     @staticmethod
     def add_unknown_label(values):
@@ -46,8 +64,6 @@ class VisualModel:
 
         if "disease" in images:
             healthy = images["disease"] == "healthy"
-            if "category" in images:
-                images.loc[healthy, "category"] = "healthy"
             if "severity" in images:
                 images.loc[healthy, "severity"] = "HEALTHY"
         return images
@@ -70,9 +86,9 @@ class VisualModel:
             unknown = plant_index.get(VisualModel.add_unknown_label(names), len(names) - 1)
             labels[head] = df[head].astype(str).map(lambda v: plant_index.get(v, unknown)).to_numpy("int32")
 
-        root = str(raw_root).rstrip("/")
+        root = Path(raw_root)
         paths = df["image_path"].astype(str).map(
-            lambda p: p if p.startswith("/") else f"{root}\{p}"
+            lambda p: str(root / p.replace("\\", "/").lstrip("/"))
         ).to_numpy() # add image path for deduping later
         
         def load_plant_image(path, label):
@@ -105,7 +121,7 @@ class VisualModel:
         return data_set.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
     def build(self):
-        base = keras.applications.EfficientNetB0(
+        base = keras.applications.EfficientNetV2B0(
             include_top=False,
             weights=self.weights,
             input_shape=(*self.img_size, 3),
@@ -116,7 +132,7 @@ class VisualModel:
         image_input = keras.Input(shape=(*self.img_size, 3), name="image")
         #x = layers.Resizing(*self.img_size)(image_input)
         x = base(image_input)
-        x = layers.Dropout(0.3)(x)
+        x = layers.Dropout(self.dropout)(x)
 
         inputs = image_input
         if self.use_mask: #adding a masked channel if there is one being used
@@ -132,7 +148,7 @@ class VisualModel:
             inputs = [image_input, mask_input]
             x = layers.Concatenate()([x, m])
 
-        outputs = [layers.Dense(len(names), activation = "softmax", name = head)(x) for head, names in self.classes.items()]
+        outputs = [layers.Dense(len(names), activation = "softmax", name = head, dtype="float32")(x) for head, names in self.classes.items()]
 
         self.model = keras.Model(inputs, outputs, name="plantqa_visual")
         return self.model
@@ -141,27 +157,37 @@ class VisualModel:
         self.model.compile(
             optimizer=keras.optimizers.Adam(lr),
             loss={h: "sparse_categorical_crossentropy" for h in self.classes},
+            loss_weights = self.loss_weights,
             metrics={h: ["accuracy"] for h in self.classes},
         )
 
-    def fit(self, train_ds, val_ds, epochs=20):
+    def fit(self, train_ds, val_ds, epochs=20, checkpoint_model = "best.keras"):
         calls = [
-            keras.callbacks.EarlyStopping("val_crop_accuracy", patience=4, mode="max",
-                                          restore_best_weights=True),
-            keras.callbacks.ModelCheckpoint("best.keras", monitor="val_crop_accuracy",
-                                            mode="max", save_best_only=True),
+            keras.callbacks.EarlyStopping(
+                "val_crop_accuracy",
+                patience=4,
+                mode="max",
+                restore_best_weights=True
+            ),
+            keras.callbacks.ModelCheckpoint(
+                checkpoint_model,
+                monitor="val_crop_accuracy",
+                mode="max",
+                save_best_only=True
+            ),
         ]
-        return self.model.fit(train_ds, validation_data=val_ds,
-                              epochs=epochs, callbacks=calls)
+        return self.model.fit(train_ds, validation_data=val_ds,epochs=epochs, callbacks=calls)
 
     def predict(self, image: np.ndarray, k: int = 3) -> VisualPrediction:
+        cropped_image = img_pre.crop_border(seg.to_rgb_uint8(image))
+        resized_image = img_pre.resize_image(cropped_image, self.img_size)
         if self.use_mask:
-            resized = img_pre.resize_image(seg.to_rgb_uint8(image), self.img_size)
-            mask = seg.make_mask(resized, self.img_size).astype(np.float32) / 255.0
-            model_input = {"image": np.expand_dims(resized.astype(np.float32), 0),
-                           "mask": np.expand_dims(mask, 0)}
+            masked_image = seg.unet_mask_from_image(self.unet, cropped_image, self.img_size)
+            masked_channels = seg.mask_channels(cropped_image, masked_image, self.img_size)
+            model_input = {"image": np.expand_dims(resized_image.astype(np.float32), 0),
+                           "mask": np.expand_dims(masked_channels, 0)}
         else:
-            model_input = np.expand_dims(image, 0)
+            model_input = np.expand_dims(resized_image.astype(np.float32), 0)
 
         predictions = self.model.predict(model_input, verbose=0)
         out = {}
@@ -190,14 +216,13 @@ class VisualModel:
         self.model.save(path)
 
     @classmethod
-    def load(cls, model_path, classes_path=None, img_size=(224, 224)) -> "VisualModel":
-        classes_path = Path(classes_path) if classes_path else cls.classes_path_for(model_path)
+    def load(cls, model_path, classes_path=None, img_size=(224, 224), unet = None) -> "VisualModel":
+        classes_path = Path(classes_path)
         saved_classes = json.loads(Path(classes_path).read_text())
 
-        visual_model = cls(classes=saved_classes, img_size=img_size)
+        visual_model = cls(classes=saved_classes, img_size=img_size, unet=unet)
         visual_model.model = keras.models.load_model(model_path)
         visual_model.use_mask = len(visual_model.model.inputs) > 1
-
         for c_head, names in saved_classes.items():
             number_out = visual_model.model.get_layer(c_head).output.shape[-1]
             if number_out != len(names):

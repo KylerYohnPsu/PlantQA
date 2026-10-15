@@ -1,5 +1,5 @@
 
-async function py_log(data) {
+export async function py_log(data) {
     /*
     Simple function that sends a string to the python side
     that way the python side logs it to the terminal
@@ -18,7 +18,7 @@ async function py_log(data) {
     }
 }
 
-async function send_question_prompt(question, image) {
+export async function send_question_prompt(question, image) {
     /*
     Send a question/image pair to the backend for processing
     */

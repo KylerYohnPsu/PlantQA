@@ -9,21 +9,38 @@ Steps to Agent
 """Are we able to leverage the local host model"""
 """Add in crowd sourced data to the model"""
 
-import agents.util.ResponseModel as ResponseModel
-import agents.util.Retriever as Retriever
-import Visual_Agent as Visual_Agent
+from src.util.system_status import SystemStatus
+from src.util.logger import Logger
 
 class NLPAgent:
-    def __init__(self, retriever, response_model, visual_model):
+    def __init__(self, retriever, response_model, visual_model, ui=None):
         self.retriever = retriever
         self.response_model= response_model
         self.visual_model = visual_model
-    def ask_question(self, image, question, plant_code_filter = None, num_results = 5):
-        if image is not None and self.visual_model is not None and plant_code_filter is None:
-            pred = self.visual_model.predict(image)
-            plant_code_filter = pred.crop
+        self.ui= ui
 
-        question_embedding = self.retriever.retrieve(question, plant_code_filter, num_results = num_results)
+    def ask_question(self, image, question, plant_code_filter = None, num_results = 5, visual_predictions = None):
+        prediction = None
+        if visual_predictions is None and image is not None and self.visual_model is not None:
+            self.set_ui_status(SystemStatus.PREDICTING)
+            Logger.info(f"Predicting image class...")
+            prediction = self.visual_model.predict(image)
+            visual_predictions = prediction.get_observations()
 
-        answer = self.response_model.generate_answer(question = question, chunks = question_embedding)
+        self.set_ui_status(SystemStatus.EMBEDDING)
+        Logger.info(f"Retrieving database embeddings...")
+        question_embedding = self.retriever.retrieve(
+            f"{question} {visual_predictions}" if visual_predictions else question,
+            plant_code_filter = prediction.get_plant_code() if prediction else plant_code_filter,
+            genus_filter = prediction.get_genus() if prediction else None,
+            num_results = num_results)
+
+        self.set_ui_status(SystemStatus.GENERATING)
+        Logger.info(f"Beginning answer generation...")
+        answer = self.response_model.generate_answer(question = question, chunks = question_embedding, visual_predictions = visual_predictions)
         return answer
+
+    def set_ui_status(self, status: SystemStatus):
+        # update the UI's status
+        if self.ui is not None:
+            self.ui.set_status(status)

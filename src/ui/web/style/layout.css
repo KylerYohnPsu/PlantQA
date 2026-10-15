@@ -1,21 +1,33 @@
 *, *::before, *::after {
     box-sizing: border-box;
+    font-family: Georgia;
 }
 
 html, body {
+    margin: 0;
+    padding: 0;
     height: 100%;
-    background: var(--bg);
     color: var(--text-header);
     font-family: 'Inter', sans-serif;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    background: var(--main-bg);
+}
+
+#layout {
+    display: flex;
+    flex: 13;
+    min-height: 0;
+    min-width: 0;
+
 }
 
 .section {
+    padding: 12px;
     background: none;
     border: none;
-    border-radius: 12px;
+    border-radius: 0;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -25,23 +37,31 @@ html, body {
     gap: 1%;
 }
 
-.title {
-    font-size: clamp(5px, 3vw, 60px);
-    font-weight: bold;
-}
+
 .horizontal-divider {
     width: 100%;
     height: 1px;
     background: var(--divider-color);
 }
 
+
 .section.header {
-    flex: 2;
+    flex: 1;
+    background: var(--header-bg);
+}
+#header-divider {
+    width: 100%;
 }
 
 .section.main {
-    flex: 14;
+    padding-top: 24px;
+    flex: 13;
     min-height: 0;
+    background: var(--main-bg);
+    padding-left: 72px;
+    padding-right: 72px;
+    padding-bottom: 36px;
+    gap: 24px;
 }
 
 .main-subsection {
@@ -53,15 +73,12 @@ html, body {
     justify-content: center;
     overflow: hidden;
     min-height: 0;
-    gap: 1%;
+    gap: 12px;
 }
+
 .main-subsection.left {
     flex: 1;
 }
 .main-subsection.right {
-    flex: 1;
-}
-
-.section.footer {
     flex: 1;
 }

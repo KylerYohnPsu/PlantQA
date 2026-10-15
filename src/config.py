@@ -7,6 +7,10 @@ class General:
     PROJECT_ROOT= Path(__file__).resolve().parent.parent
     DATA_DIR= PROJECT_ROOT / "data"
 
+class UI:
+    WEB_DIR= General.PROJECT_ROOT / "src" / "ui" / "web"
+    UI_HTML= WEB_DIR / "ui.html"
+
 class Logging:
     """
     Config for Logging
@@ -19,10 +23,11 @@ class Logging:
         "INFO": "green",
         "WARNING": "yellow",
         "ERROR": "red",
-        "CRITICAL": "bold_red",
+        "CRITICAL": "purple",
     }
 
 class Data:
+    SEGMENTED_IMAGES = General.DATA_DIR / "masked_images"
     class GBIF:
         """
         Config for GBIF dataset management
@@ -32,7 +37,7 @@ class Data:
         TEST_FILE= ROOT / "test_df.csv"
         VALIDATION_FILE= ROOT / "val_df.csv"
         FULL_FILE= ROOT / "GBIF_Data_set.csv"
-
+        IMAGES = General.DATA_DIR / 'GBIF_Pre_Processed'
     class PlantExpertVQA:
         """
         Config for PlantExpertVQA dataset management
@@ -43,7 +48,7 @@ class Data:
         TEST_FILE= DATA / "test.csv"
         VALIDATION_FILE= DATA / "val.csv"
 
-        TEXT_COLUMNS= ["question_text", "answer"]
+        TEXT_COLUMNS= []#["question_text", "answer"]
         COLUMNS_TO_REMOVE= ["dataset_source"]
 
         NA_FILL= {
@@ -68,6 +73,7 @@ class Data:
         ROOT= General.DATA_DIR / "PlantLeafLet"
         DATA= ROOT / "data"
         CSV= ROOT / "csv"
+        IMAGES = ROOT / 'images'
 
         TEXT_COLUMNS= ["question", "answer", "A", "B", "C", "D"]
         COLUMNS_TO_REMOVE= []
