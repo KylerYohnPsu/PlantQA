@@ -1,0 +1,36 @@
+.section.header {
+    flex: 0.75;
+    background: var(--header-bg);
+    display: flex;
+    padding-left: 24px;
+    padding-right: 24px;
+    justify-content: flex-start; 
+    align-items: center;   
+}
+#header-divider {
+    width: 100%;
+}
+.vertical-divider {
+    height: 100%;
+    width: 1px;
+    background: var(--divider-color);
+}
+#header-vert-divider {
+    width: 1px;
+    height: 60%;
+    align-self: center;
+    flex-shrink: 0;
+    background: var(--divider-color);
+}
+
+.title {
+    flex: 0 0 auto;
+    font-size: clamp(5px, 3vw, 40px);
+    font-weight: bold;
+    color: var(--text-title);
+}
+#header-subtitle {
+    flex: 0 0 auto;
+    font-size: clamp(15px, 1vw, 20px);
+    color: var(--text-header-subtitle);
+}

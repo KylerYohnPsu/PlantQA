@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run PlantQA",
+            "type": "shell",
+            "command": "source venv/bin/activate && python3 -m main -ip 127.0.0.1 -p 8000",
+            "options": {
+                "shell": {
+                    "executable": "/bin/bash",
+                    "args": ["-c"]
+                }
+            },
+            "problemMatcher": []
+        }
+    ]
+}

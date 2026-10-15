@@ -31,3 +31,5 @@ seaborn
 fastapi
 uvicorn
 python-multipart
+peft
+dotenv

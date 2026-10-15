@@ -3,6 +3,12 @@ from src.util.logger import Logger, bold, italic, underline
 import pandas as pd
 import re
 from pathlib import Path
+import numpy as np
+
+def make_random_np_img():
+    rng= np.random.default_rng()
+    rand= rng.integers(0, 256, size=(300,300,3), dtype=np.uint8)
+    return rand
 
 def is_csv(file: Path):
     if not isinstance(file, Path):
@@ -30,6 +36,16 @@ def is_docx(file: Path):
         return True
     else:
         return False
+
+def is_json(file: Path):
+    if not isinstance(file, Path):
+        raise TypeError("Only accepts Path objects")
+    
+    if file.is_file() and file.suffix.lower() == ".json":
+        return True
+    else:
+        return False
+
 
 def split_text_by_sentence(text:str):
     sentences = re.split(r'(?<=[.!?])\s+', text)

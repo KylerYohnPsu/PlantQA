@@ -7,6 +7,10 @@ class General:
     PROJECT_ROOT= Path(__file__).resolve().parent.parent
     DATA_DIR= PROJECT_ROOT / "data"
 
+class UI:
+    WEB_DIR= General.PROJECT_ROOT / "src" / "ui" / "web"
+    UI_HTML= WEB_DIR / "ui.html"
+
 class Logging:
     """
     Config for Logging
@@ -19,7 +23,7 @@ class Logging:
         "INFO": "green",
         "WARNING": "yellow",
         "ERROR": "red",
-        "CRITICAL": "bold_red",
+        "CRITICAL": "purple",
     }
 
 class Data:
