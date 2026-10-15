@@ -121,7 +121,7 @@ class VisualModel:
         return data_set.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
     def build(self):
-        base = keras.applications.EfficientNetB0(
+        base = keras.applications.EfficientNetV2B0(
             include_top=False,
             weights=self.weights,
             input_shape=(*self.img_size, 3),
