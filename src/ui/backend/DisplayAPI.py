@@ -89,11 +89,22 @@ class DisplayAPI:
         }
         self._enqueue(self._answerQueue, answer)
 
-    def decode_image(self, image_data: bytes) -> np.array:
+    """def decode_image(self, image_data: bytes) -> np.array:
         image = Image.open(io.BytesIO(image_data))
         image = ImageOps.exif_transpose(image)
         image= image.convert("RGB")
         image= np.asarray(image)
+        return image"""
+
+    def decode_image(self, image_data: bytes) -> np.ndarray:
+        with Image.open(io.BytesIO(image_data)) as img:
+            image = np.asarray(img.convert("RGB")).copy()
+
+        Logger.info(
+            f"Decoded image: shape={image.shape}, "
+            f"dtype={image.dtype}, contiguous={image.flags['C_CONTIGUOUS']}"
+        )
+
         return image
 
     def _initialize_ui(self):
@@ -119,7 +130,7 @@ class DisplayAPI:
 
     def _dequeue(self, q: queue.Queue):
         try:
-            data= q.get(block=False, timeout=0.1)
+            data= q.get(block=False)
             return data
         except queue.Empty:
             return None
@@ -167,6 +178,7 @@ class DisplayAPI:
                 while self._run:
                     answer= await asyncio.to_thread(self._get_answer)
                     if answer is None:
+                        await asyncio.sleep(0.1)
                         continue
                     await websocket.send_json(answer)
             except WebSocketDisconnect:

@@ -10,6 +10,7 @@ Steps to Agent
 """Add in crowd sourced data to the model"""
 
 from src.util.system_status import SystemStatus
+from src.util.logger import Logger
 
 class NLPAgent:
     def __init__(self, retriever, response_model, visual_model, ui=None):
@@ -22,10 +23,12 @@ class NLPAgent:
         prediction = None
         if visual_predictions is None and image is not None and self.visual_model is not None:
             self.set_ui_status(SystemStatus.PREDICTING)
+            Logger.info(f"Predicting image class...")
             prediction = self.visual_model.predict(image)
             visual_predictions = prediction.get_observations()
 
         self.set_ui_status(SystemStatus.EMBEDDING)
+        Logger.info(f"Retrieving database embeddings...")
         question_embedding = self.retriever.retrieve(
             f"{question} {visual_predictions}" if visual_predictions else question,
             plant_code_filter = prediction.get_plant_code() if prediction else plant_code_filter,
@@ -33,6 +36,7 @@ class NLPAgent:
             num_results = num_results)
 
         self.set_ui_status(SystemStatus.GENERATING)
+        Logger.info(f"Beginning answer generation...")
         answer = self.response_model.generate_answer(question = question, chunks = question_embedding, visual_predictions = visual_predictions)
         return answer
 

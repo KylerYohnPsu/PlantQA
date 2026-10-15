@@ -44,21 +44,27 @@ class PlantQA:
         Logger.info(f"Initializing embedding model...")
         self._embedder= TextEmbedder.TextEmbedder("sentence-transformers/all-MiniLM-L6-v2")
         Logger.info(f"Embedding model initialized!")
+
         Logger.info(f"Connecting to supabase...")
         self._supabaseClient= su.connect_supabase()
         Logger.info(f"Supabase connected!")
-        Logger.info(f"Initializing UNET model...")
-        self._unet= keras.models.load_model(unet_weights, compile=False)
-        Logger.info(f"UNET model initialized!")
+        
         Logger.info(f"Building retriever...")
         self._retriever = Retriever.Retriever(self._supabaseClient, self._embedder, match_threshold=match_threshold)
         Logger.info(f"Retriever initialized!")
+
         Logger.info(f"Initializing response model...")
-        self._responseModel= ResponseModel.ResponseModel(lora=True)
+        self._responseModel= ResponseModel.ResponseModel(adapter=response_adapter)
         Logger.info(f"Response model initialized!")
+
+        Logger.info(f"Initializing UNET model...")
+        self._unet= keras.models.load_model(unet_weights, compile=False)
+        Logger.info(f"UNET model initialized!")
+
         Logger.info(f"Initializing visual model")
-        self._visualModel= Visual_Agent.VisualModel(visual_weights, visual_json, unet=self._unet)
+        self._visualModel= Visual_Agent.VisualModel.load(visual_weights, visual_json, unet=self._unet)
         Logger.info(f"Visual model initialized!")
+    
         Logger.info(f"Prepping agent...")
         self._agent= NLP_Agent.NLPAgent(retriever=self._retriever, response_model=self._responseModel, visual_model=self._visualModel, ui=self._displayAPI)
         Logger.info(f"Agent ready!")
@@ -84,6 +90,8 @@ class PlantQA:
             Logger.info(f"Shutdown command received.")
         except Exception as E:
             Logger.critical(f"Error in primary PlantQA thread: {E}")
+            self._cleanup()
+            raise E
         finally:
             self._cleanup()
 
@@ -109,6 +117,9 @@ class PlantQA:
         """
         Prep the inputs, ask the question, send the answer to the UI
         """
+        Logger.info(type(image))
+        Logger.info(image.shape)
+
         # prep the question data
         question= self._prep_question(question)
 

@@ -21,5 +21,7 @@ def connect_supabase():
     load_dotenv()
     SUPABASE_URL = os.getenv("SUPABASE_URL")  # Get from .env
     SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+    print(SUPABASE_URL)
+    print(SUPABASE_KEY)
     supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
     return supabase_client
