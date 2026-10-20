@@ -35,7 +35,7 @@ class NLPAgent:
         self.set_ui_status(SystemStatus.GENERATING)
         Logger.info(f"Beginning answer generation...")
         answer = self.response_model.generate_answer(question = question, chunks = question_embedding, visual_predictions = visual_predictions)
-        return answer
+        return answer, prediction
 
     def set_ui_status(self, status: SystemStatus):
         # update the UI's status

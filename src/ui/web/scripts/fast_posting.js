@@ -46,3 +46,23 @@ export async function send_question_prompt(question, image) {
 
 }
 
+export async function load_history() {
+    try {
+        const response= await fetch("/history");
+
+        if (!response.ok) 
+            throw new Error(`HTTP error: ${response.status}`);
+        
+
+        const data= await response.json();
+        if (data.status === "fail")
+            return null;
+
+        py_log("History received.");
+
+        return data.history;
+    } catch (error) {
+        console.error("Failed to load history: ", error);
+        return null
+    }
+}

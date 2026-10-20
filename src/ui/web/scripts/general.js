@@ -3,12 +3,18 @@ import * as posting from "./fast_posting.js";
 
 document.addEventListener("DOMContentLoaded", initialize);
 
-function initialize() {
+async function initialize() {
     const image_upload= document.getElementById("image-upload");
     const prompt_button= document.getElementById("prompt-button");
 
     image_upload.addEventListener("change", upload_image);
     prompt_button.addEventListener("click", ask_question);
+
+    const history= await posting.load_history()
+    if (history != null)
+        HISTORY.load_history(history);
+    else
+        return // run a loop a few times to try getting the history again
 
     posting.py_log("UI Initialized!")
 }
