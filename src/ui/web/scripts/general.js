@@ -60,6 +60,14 @@ async function ask_question() {
         return;
     }
 
+    const placeholder= document.getElementById("answer-placeholder");
+    const answer= document.getElementById("answer");
+    const loading= document.getElementById("answer-loading")
+
+    placeholder.style.display= "none";
+    answer.style.display= "none";
+    loading.style.display= "flex"
+
     const response= await posting.send_question_prompt(question, image);
     
     HISTORY.add(response.job_id, question, image);
@@ -104,8 +112,10 @@ export function update_status_text(status) {
 export function set_answer(new_answer) {
     const placeholder= document.getElementById("answer-placeholder");
     const answer= document.getElementById("answer");
+    const loading= document.getElementById("answer-loading")
 
     placeholder.style.display= "none";
+    loading.style.display= "none";
     answer.textContent= ""
     answer.style.display= "flex";
 

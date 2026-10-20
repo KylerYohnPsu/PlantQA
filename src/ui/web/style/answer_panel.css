@@ -55,8 +55,8 @@
     flex: 1;
 }
 
+#answer-loading,
 #answer-placeholder {
-    display: flex;
     flex-direction: column;
     flex: 1;
     align-items: center;
@@ -67,13 +67,28 @@
     gap: 12px;
     text-align: center;
 }
+#answer-placeholder {
+    display: flex;
+}
+#answer-loading {
+    display: none;
+    justify-content: center;
+}
 
+#loading-gif {
+    object-fit: contain;
+    width: clamp(5px, 10vw, 125px);
+    height: clamp(5px, 10vw, 125px);  
+    padding-bottom: 12px;
+    padding-top: 24px;
+}
 #leaves-icon {
     object-fit: contain;
     width: clamp(5px, 15vw, 200px);
     height: clamp(5px, 15vw, 200px);
 }
 
+#loading-label,
 #answer-placeholder-label {
     font-size: clamp(10px, 2vw, 30px);
     color: var(--text-title);
