@@ -12,7 +12,8 @@ class f1_score(keras.metrics.Metric):
         y_true = tf.cast(y_true, tf.float32)
         y_pred = tf.cast(y_pred, tf.float32)
 
-        
+        true_positives = k.sum(y_true * y_pred)
+        recall_and_precision
 @keras.saving.register_keras_serializable()
 class BCE_DICE(keras.losses.Loss):
 
