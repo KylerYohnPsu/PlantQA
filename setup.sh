@@ -36,8 +36,8 @@ printf "${BLUE}If nothing failed in a major way, then the setup succeeded!${RESE
 read -p "Setup complete.  Do you want to download the data now? (y/n): " answer
 
 if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
-    ./download_data.sh
-    ./download_leaflet.sh
+    ./scripts/download_data.sh
+    ./scripts/download_leaflet.sh
 else
     printf "${BLUE}When you are ready, download the data with the download_data.sh script.${RESET}\n"
 fi
