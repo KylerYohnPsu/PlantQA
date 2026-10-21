@@ -74,7 +74,7 @@ def frame_history(*histories):
 
     return frame
 
-def plot_loss(*histories, heads=None):
+def plot_loss(*histories, heads=None, label = None):
     frame = frame_history(*histories)
     names = [f"{h}_loss" for h in heads] if heads else ["loss"]
 
@@ -85,14 +85,14 @@ def plot_loss(*histories, heads=None):
             plt.plot(frame.index, frame[f"val_{name}"], "--", color=line.get_color(), label=f"val {name}")
     plt.xlabel("epoch")
     plt.ylabel("loss")
-    plt.title("Training vs validation loss")
+    plt.title(f"{label} - Training vs validation loss" if label else "Training vs validation loss")
     plt.legend()
     plt.grid(alpha=0.3)
     plt.tight_layout()
     plt.show()
 
 
-def plot_accuracy(*histories, heads=None):
+def plot_accuracy(*histories, heads=None, label = None):
     frame = frame_history(*histories)
     heads = heads or [c[:-len("_accuracy")] for c in frame if c.endswith("_accuracy") and not c.startswith("val_")]
 
@@ -103,7 +103,7 @@ def plot_accuracy(*histories, heads=None):
             plt.plot(frame.index, frame[f"val_{head}_accuracy"], "--", color=line.get_color(), label=f"val {head}")
     plt.xlabel("epoch")
     plt.ylabel("accuracy")
-    plt.title("Training vs validation accuracy")
+    plt.title(f"{label} - Training vs validation accuracy" if label else "Training vs validation accuracy")
     plt.legend()
     plt.grid(alpha=0.3)
     plt.tight_layout()
