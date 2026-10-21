@@ -3,25 +3,23 @@ import keras
 import numpy as np
 import keras.ops as k
 import tensorflow as tf
-
-class f1_score(keras.metrics.Metric):
-    def __init__(self, dtype=None, name=None):
-        super().__init__(dtype, name)
+@keras.saving.register_keras_serializable()
+class f1_score(keras.metrics.F1Score):
+    def __init__(self, average=None, threshold=None, name="f1_score", dtype=None):
+        super().__init__(average, threshold, name, dtype)
 
     def update_state(self, y_true, y_pred, sample_weight=None):
-        y_true = tf.cast(y_true, tf.float32)
-        y_pred = tf.cast(y_pred, tf.float32)
-
-        true_positives = k.sum(y_true * y_pred)
-        recall_and_precision
+        y_true = tf.reshape(tf.cast(y_true, tf.float32), [-1,1])
+        y_pred = tf.reshape(tf.cast(y_pred, tf.float32), [-1,1])
+        return super().update_state(y_true, y_pred)
 @keras.saving.register_keras_serializable()
 class BCE_DICE(keras.losses.Loss):
 
-    def __init__(self, threshold=0.5,smoothing=1, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, threshold=0.5,smoothing=1,name='BCE_DICE', **kwargs):
+        super().__init__(name=name,**kwargs)
         self.threshold = threshold
         self.smoothing = smoothing
-        self.BCE_LOSS = keras.losses.BinaryCrossentropy(reduction=None)
+
     def call(self, y_true, y_pred):
         #ensure tensors are floats 
         y_pred = tf.cast(y_pred, tf.float32)
@@ -36,16 +34,12 @@ class BCE_DICE(keras.losses.Loss):
     
     def get_config(self):
         config = super().get_config() 
-        config = config.update({'threshold': self.threshold, "smoothing": self.smoothing})
-        return 
+        config.update({'threshold': self.threshold, "smoothing": self.smoothing})
+        return config
     
-def dice_coef(y_true, y_pred, smooth, thresh):
-    y_pred = y_pred(y_pred > thresh)
-    
-
 
 class UNET:
-    def __init__(self, img_size=(500,500), dropout_value=0.4, add_dropout = True):
+    def __init__(self, img_size=(512,512), dropout_value=0.4, add_dropout = True):
         self.img_size = img_size
         self.dropout_value = dropout_value
         self.add_dropout = add_dropout
@@ -102,13 +96,13 @@ class UNET:
 
     def compile(self, lr=1e-4):
         self.model.compile(optimizer=keras.optimizers.Adam(lr),
-                           loss= keras.losses.Dice(axis=(1,2,3),name='dice'),
-                           metrics=[keras.metrics.Accuracy(name='accuracy'),
+                           loss= BCE_DICE(threshold=0.7),
+                           metrics=[keras.metrics.BinaryAccuracy(threshold=0.7, name='accuracy'),
                                     keras.metrics.BinaryIoU(target_class_ids=(0,1), threshold=0.7, name='BIoU'),
                                     keras.metrics.BinaryIoU(target_class_ids=[1], threshold=0.7, name='Disease_BIoU'), 
-                                    keras.metrics.F1Score(average='macro', threshold=0.7), 
-                                    keras.metrics.Precision(name='Precision')
-                                    ,keras.metrics.Recall(name='Recall'),],
+                                    f1_score('macro',0.7,'MACRO_f1_score'), 
+                                    keras.metrics.Precision(name='Precision', thresholds=0.7)
+                                    ,keras.metrics.Recall(name='Recall', thresholds=0.7),],
                            jit_compile=False)
         
     def predict(self, image, threshold=0.7):
@@ -123,11 +117,11 @@ class UNET:
     
     def fit(self, train_ds, val_ds, epochs=20):
             calls = [
-                keras.callbacks.EarlyStopping("val_IoU", patience=8, mode="max",
+                keras.callbacks.EarlyStopping("val_Disease_BIoU", patience=8, mode="max",
                                               restore_best_weights=True),
-                keras.callbacks.ModelCheckpoint("best.keras", monitor="val_BIoU",
+                keras.callbacks.ModelCheckpoint("best.keras", monitor="val_Disease_BIoU",
                                                 mode="max", save_best_only=True),
-                keras.callbacks.ReduceLROnPlateau(monitor='val_dice', mode='min',factor=0.2, patience=4, min_lr=1e-6)
+                keras.callbacks.ReduceLROnPlateau(monitor='val_loss', mode='min',factor=0.2, patience=4, min_lr=1e-6)
             ]
             return self.model.fit(train_ds, validation_data=val_ds,
                                   epochs=epochs, callbacks=calls)
