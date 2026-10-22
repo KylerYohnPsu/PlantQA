@@ -14,18 +14,18 @@ EVALUATION_MODEL = "claude-haiku-4-5-20251001"
 def prediction_from_row(row, heads=("crop", "disease", "severity")):
     predictions = {}
     for head in heads:
-        predictions[head] = [(getattr(row, head), 1.0)]
+        predictions[head] = [(getattr(row, head), 1.0)] # Get the predictions from each head
 
-    return VisualPrediction(row.crop, 1.0, predictions["crop"], predictions)
+    return VisualPrediction(row.crop, 1.0, predictions["crop"], predictions) # Return the data class so claude can evaluate
 
 def _image_base64(image_path):
     path = Path(image_path)
     media = "image/png" if path.suffix.lower() == ".png" else "image/jpeg"
-    data = base64.standard_b64encode(path.read_bytes()).decode()
+    data = base64.standard_b64encode(path.read_bytes()).decode() #convert image to base 64 for claude api
     return {"type": "image",
             "source": {"type": "base64", "media_type": media, "data": data}}
 def evaluate_response(model_response, image, question, chunks, claude_client = None):
-    client =claude_client or anthropic.Anthropic()
+    client =claude_client or anthropic.Anthropic() # either reuse or make a new one
     prompt = (
         f"Question asked about the plant pictured in the image:\n{question}\n\n"
         f"Training Model's answer:\n{model_response}\n\n"
@@ -34,7 +34,7 @@ def evaluate_response(model_response, image, question, chunks, claude_client = N
         "Then judge the model against the context it was given and if this swayed the accuracy."
         "CRUCIAL - List any claim by the model not supported by evidence as a hallucination"
         "List any inaccuracy found by the model and why"
-    )
+    ) # building a prompt from all the info we have for an evaluator
     response = client.messages.parse(
         model=EVALUATION_MODEL,
         max_tokens=16000,
@@ -44,7 +44,7 @@ def evaluate_response(model_response, image, question, chunks, claude_client = N
     return response.parsed_output
 
 def show_truth(data, count=3, seed=0, k=5):
-
+    """ Used to show the real image that was sent as well as prediction"""
     for row in data.sample(count, random_state=seed).itertuples():
         visual = prediction_from_row(row)
 
