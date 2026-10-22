@@ -80,7 +80,7 @@ class ResponseModel:
         for row in data.itertuples():
             chunks = retriever.retrieve(row.question_text) if retriever else None # Optionally grab chunks for training
             prompt = self.build_prompt(question=row.question_text, chunks=chunks, visual_predictions=f"{row.crop}, {row.disease}, {row.severity}") #Include both raw predictions and chunks
-
+            # encode both the answer an the prompt. Crucially we need to mask the labels of the answer in training with -100, so the model doesn't see that input
             prompt_ids = self.tokenizer(prompt, truncation= True, max_length=2048)["input_ids"]
             answer_ids = self.tokenizer(row.answer, truncation= True, max_length=1024)["input_ids"]
             training_data.append({"input_ids": prompt_ids + answer_ids, "labels": [-100] * len(prompt_ids) + answer_ids})
@@ -107,7 +107,7 @@ class ResponseModel:
         self.model.save_pretrained(path)
 
     def load_model(self, path="./models/response_models/qwen_lora"):
-        self.model = PeftModel.from_pretrained(self.model, path)
+        self.model = PeftModel.from_pretrained(self.model, path) #pre load from the Peft pretrained method
         return self.model
 
 
