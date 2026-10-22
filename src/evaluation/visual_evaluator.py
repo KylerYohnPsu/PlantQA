@@ -9,8 +9,8 @@ from src.util.logger import Logger
 
 def predict(visual_model: VisualModel, df: pd.DataFrame, images_root, batch_size: int = 32):
     ds = VisualModel.make_dataset(df, visual_model.classes, images_root, size=visual_model.img_size,
-                                  batch_size=batch_size, training=False, use_mask=visual_model.use_mask)
-    c_heads = list(visual_model.classes)
+                                  batch_size=batch_size, training=False, use_mask=visual_model.use_mask) # make dataset from data frame
+    c_heads = list(visual_model.classes) # list of heads for classification
     y_true = {h: [] for h in c_heads}
     probs = {h: [] for h in c_heads}
 
@@ -20,7 +20,7 @@ def predict(visual_model: VisualModel, df: pd.DataFrame, images_root, batch_size
             y_true[head].append(labels[head].numpy())
             probs[head].append(np.asarray(out))
 
-    return {head: (np.concatenate(y_true[head]), np.concatenate(probs[head])) for head in c_heads}
+    return {head: (np.concatenate(y_true[head]), np.concatenate(probs[head])) for head in c_heads} # values are the prediction and probability
 
 
 def metrics_table(predictions, num_result = 3):
@@ -35,7 +35,7 @@ def metrics_table(predictions, num_result = 3):
             f"top{num_result}_accuracy": (top_k == y_true[:, None]).any(axis=1).mean(),
             "macro average f1": f1_score(y_true, y_pred, labels=np.unique(y_true), average="macro", zero_division=0)
         })
-    return pd.DataFrame(rows).set_index("head").round(3)
+    return pd.DataFrame(rows).set_index("head").round(3) #Return a dataframe of values for easy reporting
 
 
 def print_report(predictions, classes, pred):
@@ -54,7 +54,7 @@ def plot_confusion_matrix(predictions, classes, c_head):
     ConfusionMatrixDisplay.from_predictions(
         y_true, y_pred, labels=labels, display_labels=[classes[c_head][i] for i in labels],
         normalize="true", values_format=".2f", cmap="Blues", colorbar=False, xticks_rotation=45,
-    )
+    ) #Confusion matrix of select classes/headds
     plt.title(f"{c_head}: confusion matrix")
     plt.tight_layout()
     plt.show()
@@ -112,6 +112,7 @@ def plot_accuracy(*histories, heads=None, label = None):
 
 def evaluate(visual_model: VisualModel, df: pd.DataFrame, images_root, name = "Visual Model Test",
              num_results = 3, max_matrix_classes = 15):
+    """Master function to evaluate model performance, calling other helpers"""
     Logger.info(f"\n\n {name}: evaluating {len(df)} images \n\n")
     predictions = predict(visual_model, df, images_root)
 
