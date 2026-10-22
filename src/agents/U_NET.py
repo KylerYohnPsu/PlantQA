@@ -39,7 +39,7 @@ class BCE_DICE(keras.losses.Loss):
     
 
 class UNET:
-    def __init__(self, img_size=(512,512), dropout_value=0.4, add_dropout = True):
+    def __init__(self, img_size=(512,512), dropout_value=0.1, add_dropout = True):
         self.img_size = img_size
         self.dropout_value = dropout_value
         self.add_dropout = add_dropout
@@ -81,8 +81,6 @@ class UNET:
 
         d4 = self.decoder_block(b1, s4, 256)
         d3 = self.decoder_block(d4, s3, 128)
-        if self.add_dropout:
-            d3 = keras.layers.SpatialDropout2D(self.dropout_value)(d3)
         d2 = self.decoder_block(d3, s2, 64)
         if self.add_dropout:
             d2 = keras.layers.SpatialDropout2D(self.dropout_value)(d2)
