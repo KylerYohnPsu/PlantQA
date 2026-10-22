@@ -55,14 +55,14 @@ class ResponseModel:
             ),
             torch_dtype="auto",
             device_map="auto"
-        )
+        ) # We add the quantization of nf 4 bit size so we do not need to worry as much about vram
         if adapter:
             return PeftModel.from_pretrained(model, adapter)
         if lora:
             model = prepare_model_for_kbit_training(model)
             return get_peft_model(model, LoraConfig(
                 r=16, lora_alpha=32, task_type="CAUSAL_LM",
-                target_modules=["q_proj", "k_proj", "v_proj", "o_proj"]))
+                target_modules=["q_proj", "k_proj", "v_proj", "o_proj"])) #Specific heads listed from LoRA paper and tutorials
         return model
 
     def build_prompt(self, question, chunks, visual_predictions = None):
@@ -73,13 +73,13 @@ class ResponseModel:
         return self.tokenizer.apply_chat_template(
             [{"role": "system", "content": SYSTEM_PROMPT},
              {"role": "user", "content": prompt}],
-            tokenize=False, add_generation_prompt=True)
+            tokenize=False, add_generation_prompt=True) # We can specify both a system prompt for persona and user input
 
     def build_training_data(self, data, retriever = None):
         training_data = []
         for row in data.itertuples():
-            chunks = retriever.retrieve(row.question_text) if retriever else None
-            prompt = self.build_prompt(question=row.question_text, chunks=chunks, visual_predictions=f"{row.crop}, {row.disease}, {row.severity}")
+            chunks = retriever.retrieve(row.question_text) if retriever else None # Optionally grab chunks for training
+            prompt = self.build_prompt(question=row.question_text, chunks=chunks, visual_predictions=f"{row.crop}, {row.disease}, {row.severity}") #Include both raw predictions and chunks
 
             prompt_ids = self.tokenizer(prompt, truncation= True, max_length=2048)["input_ids"]
             answer_ids = self.tokenizer(row.answer, truncation= True, max_length=1024)["input_ids"]
@@ -88,7 +88,7 @@ class ResponseModel:
 
     def train_model(self, data, retriever=None, epochs=1, num_results=None,
                     out="./models/response_models/qwen_lora"):
-        training_data = self.build_training_data(data, retriever)
+        training_data = self.build_training_data(data, retriever) # Build the data
         Trainer(
             model=self.model,
             args=TrainingArguments(
@@ -98,7 +98,8 @@ class ResponseModel:
             ),
             train_dataset=training_data,
             data_collator=lambda b: {k: torch.tensor([v]) for k, v in b[0].items()},
-        ).train()
+        ).train() # Checkpointing allows fallback - tutorials used for optimizer and other hyper params.
+        # Since we are just tuning on select heads we dont need to worry too much
 
         self.save_model(out)
 

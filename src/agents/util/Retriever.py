@@ -20,6 +20,6 @@ class Retriever:
             genus = genus_filter,
             match_count=num_results,
             match_threshold=self.match_threshold
-        )
+        ) # Allows for pre-filtering on specific codes and a specified threshold.
 
         return results
