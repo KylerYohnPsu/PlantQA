@@ -132,9 +132,18 @@ def preprocess_image(image_path: str, processed_size: tuple=(500,500)):
 
 
 def get_img_pairs(img_dir, mask_dir):
+    '''
+    Link an Image and its respective mask together
+    '''
+    #arrays to store image and mask paths
     img_p, mask_p = [], []
+
     for img in sorted(img_dir.iterdir()):
+
+        #The mask shares the same name as the image, the only difference is the file format
         mask = mask_dir / str(img.stem + '.png')
+
+        #ensure mask exists, if it does append both to the arrays otherwise skip
         if mask.exists():
             img_p.append(str(img))
             mask_p.append(str(mask))
@@ -142,12 +151,22 @@ def get_img_pairs(img_dir, mask_dir):
             print(f"No Mask for {img.name}")
     return img_p, mask_p
 
+
 def load_and_preprocess_image(img_path, mask_path, img_size=(384,384)):
+    '''
+    This method will convert both images and masks into their tensor representation, and perform any preprocessing
+    '''
+    #read the image bytes into a tensor
     img = tf.io.read_file(img_path)
+
+    #convert the bytes into a jp representation, utilize 3 channels for colored images
     img = tf.image.decode_jpeg(img, channels=3)
+    #resize image to size required by model
     img = tf.image.resize(img, img_size)
+    #collapse all values into a range of 0-1
     img = tf.cast(img, tf.float32) / 255.0
 
+    #Perform the same image preprocessing on the associated mask with the image
     mask = tf.io.read_file(mask_path)
     mask = tf.image.decode_png(mask, channels=1)
     mask = tf.image.resize(mask, img_size, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
@@ -155,17 +174,32 @@ def load_and_preprocess_image(img_path, mask_path, img_size=(384,384)):
     mask = tf.cast(mask > 0, tf.float32)
     return img, mask
 
-def generate_unet_dataset(img_dir, mask_dir, img_size=(384,384), batch_size=32):
+
+def generate_unet_dataset(img_dir, mask_dir, img_size=(384,384), batch_size=32, training=False):
+    '''
+    create the datasets that will be utilized by the model
+    '''
+
     img_paths, mask_paths = get_img_pairs(img_dir, mask_dir)
 
+    #from_tensor_slices will take the image and mask paths and will generate individual tuples of the image mask pairs
     dataset = tf.data.Dataset.from_tensor_slices((img_paths, mask_paths))
 
+    #Check if the dataset is meant for training, if so randomly shuffle the data for each training epoch
+    #This will prevent the model from being able to adjust to the order of the training material
+    if training:
+            dataset = dataset.shuffle(buffer_size=len(img_paths), reshuffle_each_iteration=True)
+
+    #map the preprocessing steps to the image and masks paths
     dataset = dataset.map(
         lambda img, mask: load_and_preprocess_image(img, mask, img_size),
         num_parallel_calls=tf.data.AUTOTUNE
     )
 
+    #create the batches of the training size
     dataset = dataset.batch(batch_size)
+    #tensorflow will calculate best way to optimize data prefetching
     dataset = dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
+    
 
     return dataset

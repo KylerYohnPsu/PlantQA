@@ -78,12 +78,13 @@ class UNET:
         s4, p4 = self.encoder_block(p3, 256)
 
         b1 = self.conv_block(p4, 512)
-
+        if self.add_dropout:
+            b1 = keras.layers.SpatialDropout2D(self.dropout_value)(b1)
         d4 = self.decoder_block(b1, s4, 256)
         d3 = self.decoder_block(d4, s3, 128)
         d2 = self.decoder_block(d3, s2, 64)
-        if self.add_dropout:
-            d2 = keras.layers.SpatialDropout2D(self.dropout_value)(d2)
+        #if self.add_dropout:
+        #    d2 = keras.layers.SpatialDropout2D(self.dropout_value)(d2)
         d1 = self.decoder_block(d2, s1, 32)
         if self.add_dropout:
             d1 = keras.layers.SpatialDropout2D(self.dropout_value)(d1)
@@ -92,15 +93,15 @@ class UNET:
         model = keras.models.Model(inputs, outputs, name = "UNET")
         self.model =model
 
-    def compile(self, lr=1e-4):
-        self.model.compile(optimizer=keras.optimizers.Adam(lr),
-                           loss= BCE_DICE(threshold=0.7),
-                           metrics=[keras.metrics.BinaryAccuracy(threshold=0.7, name='accuracy'),
-                                    keras.metrics.BinaryIoU(target_class_ids=(0,1), threshold=0.7, name='BIoU'),
-                                    keras.metrics.BinaryIoU(target_class_ids=[1], threshold=0.7, name='Disease_BIoU'), 
-                                    f1_score('macro',0.7,'MACRO_f1_score'), 
-                                    keras.metrics.Precision(name='Precision', thresholds=0.7)
-                                    ,keras.metrics.Recall(name='Recall', thresholds=0.7),],
+    def compile(self, lr=1e-4, wd=1e-4):
+        self.model.compile(optimizer=keras.optimizers.AdamW(lr, wd),
+                           loss= BCE_DICE(threshold=0.5),
+                           metrics=[keras.metrics.BinaryAccuracy(threshold=0.5, name='accuracy'),
+                                    keras.metrics.BinaryIoU(target_class_ids=(0,1), threshold=0.5, name='BIoU'),
+                                    keras.metrics.BinaryIoU(target_class_ids=[1], threshold=0.5, name='Disease_BIoU'), 
+                                    f1_score('macro',0.5,'MACRO_f1_score'), 
+                                    keras.metrics.Precision(name='Precision', thresholds=0.5)
+                                    ,keras.metrics.Recall(name='Recall', thresholds=0.5),],
                            jit_compile=False)
         
     def predict(self, image, threshold=0.7):
