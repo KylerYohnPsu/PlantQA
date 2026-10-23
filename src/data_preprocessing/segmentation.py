@@ -62,32 +62,6 @@ def unet_mask_from_image(unet, image, size):
         pred = unet.predict(x, verbose=0)[0, ..., 0]
     return cv2.resize((pred * 255).astype(np.uint8), tuple(size), interpolation=cv2.INTER_AREA)
 
-def k_means(image, k: int):
-
-    img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    pixel_values = img_rgb.reshape((-1,3))
-
-    pixel_values = np.float32(pixel_values)
-
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-
-    compactness, labels, centers = cv2.kmeans(
-        pixel_values,
-        k,
-        None,
-        criteria,
-        attempts=10,
-        flags=cv2.KMEANS_RANDOM_CENTERS
-    )
-
-    centers = np.uint8(centers)
-
-    segmented_data = centers[labels.flatten()]
-    segmented_image = segmented_data.reshape((image.shape))
-
-    return segmented_image
-
 
 def get_percent_of_Disease(img_path, mask_path):
     img = cv2.imread(str(img_path))
