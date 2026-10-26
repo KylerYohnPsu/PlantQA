@@ -62,9 +62,11 @@ class VisualModel:
         for head in classification_heads:
             values = df[head].astype(str)
             known_images = df[values.str.lower() != "unknown"] #filter out unknown
+
             first_image = (known_images.groupby(["image_path", head]).size()
                    .sort_values(ascending=False).reset_index()
                    .drop_duplicates("image_path").set_index("image_path")[head]) # Drop duplicate images
+
             images[head] = images["image_path"].map(first_image).fillna(VisualModel.add_unknown_label(values.unique()))
 
         if "disease" in images: # Standardize the nomenclature
@@ -81,6 +83,7 @@ class VisualModel:
             names = sorted(df[head].astype(str).unique())
             unknown = VisualModel.add_unknown_label(names)
             plant_classes[head] = [n for n in names if n != unknown] + [unknown]
+
         return plant_classes
 
     @staticmethod
@@ -105,6 +108,7 @@ class VisualModel:
                 image_array = np.zeros((*size, 3), np.float32)  # blank image for errors in image loading
             if use_mask:  # if we use the mask we use the segmentation approach
                 return image_array, seg.mask_from_path(image_path, size, image_array)
+
             return image_array
 
         def load_plant_image(path, label):
