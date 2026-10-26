@@ -43,6 +43,8 @@ This script does the following:
 
 The script will exit if any of the steps fail.
 
+Credentials for any necessary service, Anthropic key for evaluation and Supabase key and url for chunk retrieval, you must create your own `.env` file. The `.env.example` file shows a template for users to follow, but crucially should never commit their credentials to our repository 
+
 ## Running
 
 After the project has been installed, you can execute code through the `Full_System.ipynb` notebook.
