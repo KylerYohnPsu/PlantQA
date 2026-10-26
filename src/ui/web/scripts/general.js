@@ -70,6 +70,8 @@ async function ask_question() {
 
     const response= await posting.send_question_prompt(question, image);
     
+    clear_predictions();
+
     HISTORY.add(response.job_id, question, image);
 
     posting.py_log(`Entry added to history for ID: ${response.job_id}`);
@@ -80,8 +82,6 @@ export function update_status_text(status) {
     const status_light= document.getElementById("status-light");
     if (!status_text)
         return;
-
-    status_text.style.fontSize= "clamp(3px, 2.5vw, 80px)";
 
     status_text.textContent= status.toUpperCase();
 
@@ -134,7 +134,62 @@ export function set_answer(new_answer) {
     type_next_character();
 }
 
-export function set_confidence(confidence) {
-    //const confidence_text= document.getElementById("confidence");
+export function set_confidence(top_k) {
+    clear_predictions();
 
+    Object.entries(top_k).forEach(([plant, confidence]) => {
+        create_confidence_bar(plant, parseFloat(confidence));
+    });
+}
+
+function clear_predictions() {
+    const display= document.getElementById("answer-statistics-display");
+    display.textContent="";
+}
+
+function create_confidence_bar(plant, conf) {
+    const display= document.getElementById("answer-statistics-display");
+    const confidence= (conf * 100.0).toFixed(1);
+
+    const prediction= document.createElement("div");
+    prediction.className= "prediction-confidence-container";
+
+    const label= document.createElement("div");
+    label.className= "plant-label";
+    label.textContent= plant;
+
+    const row= document.createElement("div");
+    row.className= "confidence-row";
+
+    const bar= document.createElement("div");
+    bar.className= "confidence-container";
+
+    const fill= document.createElement("div");
+    fill.className= "confidence-fill";
+    fill.style.width = "0%";
+
+    const percent= document.createElement("div");
+    percent.className= "confidence-percent";
+    percent.textContent= `${confidence}%`;
+
+    bar.appendChild(fill);
+    row.appendChild(bar);
+    row.appendChild(percent);
+
+    prediction.appendChild(label);
+    prediction.appendChild(row);
+
+    display.appendChild(prediction);
+
+    var fill_val= 0;
+    function fill_bar() {
+        if (fill_val < confidence) {
+            fill.style.width= `${fill_val}%`
+            fill_val++;
+
+            setTimeout(fill_bar, 30);
+        }
+    }
+
+    fill_bar();
 }

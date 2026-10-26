@@ -47,7 +47,7 @@
 
 #bar-plant {
     width: 180px;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 1 / 2;
     flex-shrink: 0;
     margin-top: auto;
 
@@ -57,6 +57,6 @@
         black 100%
     );
 
-    -webkit-mask: url("../images/whiteplant.png") center / contain no-repeat;
-    mask: url("../images/whiteplant.png") center / contain no-repeat;
+    -webkit-mask: url("../images/whiteplant3.png") center / contain no-repeat;
+    mask: url("../images/whiteplant3.png") center / contain no-repeat;
 }

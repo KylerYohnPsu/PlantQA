@@ -46,8 +46,8 @@ async function answer_socket_receive(event) {
     posting.py_log(classification);
     posting.py_log(top_k);
 
-    general.set_answer(answer_data.answer);
-    general.set_confidence(answer_data.confidence);
+    general.set_answer(answer);
+    general.set_confidence(top_k);
     HISTORY.update_answer(job_id, answer, confidence);
     
     
