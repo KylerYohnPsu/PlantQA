@@ -90,26 +90,24 @@ class VisualModel:
         for head, names in plant_classes.items():
             plant_index = {name: i for i, name in enumerate(names)}
             unknown = plant_index.get(VisualModel.add_unknown_label(names), len(names) - 1)
-            labels[head] = df[head].astype(str).map(lambda v: plant_index.get(v, unknown)).to_numpy("int32")
+            head_labels = df[head].astype(str).map(plant_index).fillna(unknown)  # labels not found in JSON class list are changed to "unknown"
+            labels[head] = head_labels.to_numpy("int32")
 
-        root = Path(raw_root)
-        paths = df["image_path"].astype(str).map(
-            lambda p: str(root / p.replace("\\", "/").lstrip("/"))
-        ).to_numpy() # add image path for deduping later
-        
+        paths = []
+        for image_path in df["image_path"]:
+            paths.append(img_pre.full_path(image_path, raw_root))
+        paths = np.array(paths)
+
+        def preprocess_image(image_path):
+            image_path = image_path.decode("utf-8")
+            image_array = img_pre.preprocess_image(image_path, size)
+            if image_array is None:
+                image_array = np.zeros((*size, 3), np.float32)  # blank image for errors in image loading
+            if use_mask:  # if we use the mask we use the segmentation approach
+                return image_array, seg.mask_from_path(image_path, size, image_array)
+            return image_array
+
         def load_plant_image(path, label):
-            def preprocess_image(image_path):
-                image_path = image_path.decode("utf-8")
-                curr_image = img_pre.load_image(image_path) #load the image with preprocessing
-                if curr_image is None:
-                    curr_image = np.zeros((*size, 3), np.uint8) #Blank image
-                cropped_image = img_pre.crop_border(curr_image) #remove image border
-                resized_image = img_pre.resize_image(cropped_image, size) #resize to specified size
-                image_array = np.asarray(resized_image, dtype=np.float32) #convert to float 32 numpy array
-                if use_mask:
-                    return image_array, seg.mask_from_path(image_path, size, cropped_image) #if we want to use a mask we segment from the mask
-                return image_array
-
             if not use_mask:
                 img = tf.numpy_function(preprocess_image, [path], tf.float32) #normal, non-mask preprocessing
                 img.set_shape((*size, 3))

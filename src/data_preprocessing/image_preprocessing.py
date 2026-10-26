@@ -130,6 +130,9 @@ def preprocess_image(image_path: str, processed_size: tuple=(500,500)):
     return image.astype(np.float32)
 
 
+def full_path(image_path, images_root):
+    image_path = str(image_path).replace("\\", "/")
+    return str(pathlib.Path(images_root) / image_path.lstrip("/"))
 
 def get_img_pairs(img_dir, mask_dir):
     '''
