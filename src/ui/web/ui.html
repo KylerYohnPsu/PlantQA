@@ -76,6 +76,7 @@
                             </div>
 
                         </div>
+
                     </div>
 
                     <div id="main-right" class="main-subsection right">
@@ -96,10 +97,16 @@
                                         <div id="answer-placeholder-sublabel">PlantQA can identify species, diagnose diseases, and provide care instructions!</div>
                                     </div>
                                 </div>
+                                <div id="answer-loading">
+                                    <img id="loading-gif" src="images/loading.gif">
+                                    <div id="loading-text">
+                                        <div id="loading-label">Answering.  Please wait...</div>
+                                    </div>
+                                </div>
                                 <div id="answer"></div>
                             </div>
                             <div id="answer-statistics-title-section">
-                                <div id="answer-statistics-title">Answer Metadata</div>
+                                <div id="answer-statistics-title">Prediction Confidence</div>
                             </div>
                             <div class="horizontal-divider answer-panel-divider"></div>
                             <div id="answer-statistics-display">
@@ -107,7 +114,10 @@
                             </div>
                         </div>
                     </div>
+                    
                 </div>
+                <div id="disclaimer">Disclaimer: PlantQA is an experimental system and may make mistakes.  Always double check answers with first-party sources.</div>
+
             </section>
 
             <section id="history-page" class="page">

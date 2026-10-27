@@ -11,9 +11,11 @@ import src.util.general as general_util
 
 class HistoryTracker:
     def __init__(self):
+        self._initialized= False
         self._initialize_dir()
         self._load_existing_history()
         Logger.info(f"History initialized!")
+        self.initialized= True
 
     def add(self, job_id, question, image):
         entry = self._make_entry(job_id, question, image)

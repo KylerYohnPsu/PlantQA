@@ -125,14 +125,21 @@ class PlantQA:
 
         # Ask the agent the question and get the answer
         # TODO: have the agent return confidence, other metadata
-        answer= self._agent.ask_question(image=image, question=question)
-        confidence= round(random.random(), 2)
-
+        answer, prediction= self._agent.ask_question(image=image, question=question)
+        if prediction is not None:
+            confidence= prediction.conf_interval
+            top_k= prediction.top_k_results
+            classification= prediction.plant_classification
+        else:
+            confidence= 0
+            top_k= None
+            classification= None
+        
         # update the history to have the answer and confidence for the relevant question
         HISTORY.update_answer(job_id, answer, confidence)
 
         # send the answer to the display
-        self._displayAPI.send_answer(answer, confidence, job_id)
+        self._displayAPI.send_answer(answer, confidence, job_id, classification, top_k)
 
     def _prep_question(self, question):
         """

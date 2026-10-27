@@ -17,11 +17,15 @@ import webbrowser
 import shutil 
 import subprocess
 from pathlib import Path
+import pandas as pd
+from fastapi.responses import StreamingResponse
 
 from src.util.prompt import Prompt
 from src.util.system_status import SystemStatus
 
 from src.config import UI as ui_config
+
+from src.util.history_tracker import HISTORY
 
 class DisplayAPI:
 
@@ -81,11 +85,17 @@ class DisplayAPI:
     def set_status(self, status: SystemStatus):
         self._status= status
 
-    def send_answer(self, answer, confidence, job_id):
+    def send_answer(self, answer, confidence, job_id, classification=None, top_k=None,):
+        top_k_dict= {}
+        for (plant, conf) in top_k:
+            top_k_dict[plant]= round(conf,3)
+
         answer= {
             "answer": answer, 
-            "confidence": confidence, 
-            "job_id": job_id
+            "confidence": round(confidence,3), 
+            "job_id": job_id,
+            "classification": classification,
+            "top_k": top_k_dict,
         }
         self._enqueue(self._answerQueue, answer)
 
@@ -150,6 +160,54 @@ class DisplayAPI:
         async def log(log: str=Form(...)):
             Logger.info(f"[JS] {log}")
             return {"status": "received"}
+
+        @self.app.get("/history")
+        async def get_history():
+            if not HISTORY.initialized:
+                return {"status": "fail"}
+
+            history= HISTORY.get()
+            if history.empty:
+                return {"status": "success", "history": []}
+
+            records= []
+            for record in history.to_dict(orient="records"):
+                confidence= record["confidence"]
+                question= record["question"]
+                answer= record["answer"]
+                job_id= record["job_id"]
+
+                this_record= {
+                    "question": question,
+                    "answer": answer,
+                    "confidence": float(confidence) if pd.notna(confidence) else None,
+                    "job_id": job_id,
+                }
+
+                records.append(this_record)
+
+            return {"status": "success", "history": records}
+
+        @self.app.get("/history/{job_id}/image")
+        async def get_history_image(job_id: str):
+            history= HISTORY.get()
+            matching= history[history["job_id"] == job_id]
+
+            if matching.empty:
+                return {"image": None}
+
+            image_array= matching.iloc[-1]['image']
+
+            try:
+                image= Image.fromarray(np.asarray(image_array))
+                buffer= io.BytesIO()
+                image.save(buffer, format="PNG")
+                buffer.seek(0)
+
+                return StreamingResponse(buffer, media_type="image/png")
+            except Exception as E:
+                Logger.error(f"Failed to get image: {E}")
+                return {"image": None}
             
         @self.app.post("/ask")
         async def ask_question(image: UploadFile=File(...), question: str=Form(...)):
@@ -180,6 +238,7 @@ class DisplayAPI:
                     if answer is None:
                         await asyncio.sleep(0.1)
                         continue
+                    Logger.info(f"Answer Json: {answer}")
                     await websocket.send_json(answer)
             except WebSocketDisconnect:
                 pass

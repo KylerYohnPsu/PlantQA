@@ -40,9 +40,14 @@ async function answer_socket_receive(event) {
     const answer= answer_data.answer;
     const confidence= answer_data.confidence;
     const job_id= answer_data.job_id;
+    const classification= answer_data.classification;
+    const top_k= answer_data.top_k;
 
-    general.set_answer(answer_data.answer);
-    general.set_confidence(answer_data.confidence);
+    posting.py_log(classification);
+    posting.py_log(top_k);
+
+    general.set_answer(answer);
+    general.set_confidence(top_k);
     HISTORY.update_answer(job_id, answer, confidence);
     
     

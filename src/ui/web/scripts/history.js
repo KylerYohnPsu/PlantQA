@@ -6,14 +6,20 @@ class History extends EventTarget {
         this._tableContents= document.getElementById("history-table-contents");
     }//constructor
 
-    add(job_id, question, image) {
+    add(job_id, question, image, answer="<PENDING>", confidence="--") {
+        let image_url;
+        if (typeof image === "string")
+            image_url= image;
+        else
+            image_url= URL.createObjectURL(image);
+
         const entry= {
             job_id,
             question,
             image,
-            confidence: "--",
-            image_url: URL.createObjectURL(image),
-            answer: "<PENDING>",
+            confidence: confidence,
+            image_url: image_url,
+            answer: answer,
             status: "pending",
         };//entry
 
@@ -40,6 +46,17 @@ class History extends EventTarget {
 
         URL.revokeObjectURL(entry.image_url);
         this._entries.delete(job_id);
+    }
+
+    load_history(history) {
+        history.forEach((record) => {
+            console.log(`Adding record for ${record.job_id}`);
+            this.add(record.job_id, record.question, this.image_url(record.job_id), record.answer, record.confidence);
+        });
+    }
+
+    image_url(job_id) {
+        return `/history/${encodeURIComponent(job_id)}/image`;
     }
 
     get_entry(job_id) {return this._entries.get(job_id);}
