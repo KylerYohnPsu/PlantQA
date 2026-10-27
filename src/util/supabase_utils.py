@@ -17,6 +17,18 @@ def query_embeddings(supabase_client, query, plant_code = None, common_name = No
     }).execute()
     return results.data
 
+def log_interaction(supabase_client, user_image, user_question,
+                    predicted_crop=None, predicted_disease=None, predicted_status=None):
+    result = supabase_client.rpc("log_interaction", {
+        "new_image": user_image,
+        "new_question": user_question,
+        "new_predicted_crop": predicted_crop,
+        "new_predicted_disease": predicted_disease,
+        "new_predicted_status": predicted_status,
+    }).execute()
+    return result.data
+
+
 def connect_supabase():
     load_dotenv()
     SUPABASE_URL = os.getenv("SUPABASE_URL")  # Get from .env
