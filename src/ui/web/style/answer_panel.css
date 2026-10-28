@@ -91,7 +91,7 @@
 
 #loading-label,
 #answer-placeholder-label {
-    font-size: clamp(10px, 2vw, 30px);
+    font-size: clamp(10px, 2vw, 25px);
     color: var(--text-title);
 }
 #answer-placeholder-sublabel {

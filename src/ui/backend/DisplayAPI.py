@@ -210,14 +210,14 @@ class DisplayAPI:
                 return {"image": None}
             
         @self.app.post("/ask")
-        async def ask_question(image: UploadFile=File(...), question: str=Form(...)):
+        async def ask_question(image: UploadFile=File(...), question: str=Form(...), permission: bool=File(...)):
             image_data= await image.read()
 
             Logger.debug(f"Enqueuing prompt: {question}")
 
             job_id= str(uuid.uuid4().hex)
             decoded_image= self.decode_image(image_data)
-            prompt= Prompt(question, decoded_image, job_id)
+            prompt= Prompt(question, decoded_image, permission, job_id)
             self._enqueue(self._promptQueue, prompt)
 
             response= {

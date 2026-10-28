@@ -18,7 +18,7 @@ export async function py_log(data) {
     }
 }
 
-export async function send_question_prompt(question, image) {
+export async function send_question_prompt(question, image, permission) {
     /*
     Send a question/image pair to the backend for processing
     */
@@ -26,8 +26,8 @@ export async function send_question_prompt(question, image) {
     const ask_data= new FormData();
     ask_data.append("image", image);
     ask_data.append("question", question);
+    ask_data.append("permission", String(permission));
     const ask_content= {method: "POST", body: ask_data};
-
 
     try {
         console.log("Attempting to send question...")

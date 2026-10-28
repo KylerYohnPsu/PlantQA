@@ -47,6 +47,12 @@ export function get_image() {
     return image
 }
 
+export function get_permission() {
+    const permission_box= document.getElementById("allow-storing-responses")
+    const permission= permission_box.checked;
+    return permission;
+}
+
 async function ask_question() {
     const question= get_question();
     if (question === "") {
@@ -60,6 +66,8 @@ async function ask_question() {
         return;
     }
 
+    const permission= get_permission();
+
     const placeholder= document.getElementById("answer-placeholder");
     const answer= document.getElementById("answer");
     const loading= document.getElementById("answer-loading")
@@ -68,7 +76,7 @@ async function ask_question() {
     answer.style.display= "none";
     loading.style.display= "flex"
 
-    const response= await posting.send_question_prompt(question, image);
+    const response= await posting.send_question_prompt(question, image, permission);
     
     clear_predictions();
 

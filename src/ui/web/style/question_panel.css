@@ -135,3 +135,11 @@
     width: 100%;
     font-size: clamp(5px, 2vw, 40px);
 }
+
+input[type="checkbox"] {
+    accent-color: var(--bg-button);
+    border: 1px solid var(--border);
+}
+#checkbox-label {
+    font-size: clamp(4px, 1.5vw, 15px);
+}

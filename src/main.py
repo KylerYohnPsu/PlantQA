@@ -111,9 +111,9 @@ class PlantQA:
         self._displayAPI.set_status(SystemStatus.PROCESSING)
 
         # Try to answer the question
-        self._answer_question(prompt.question, prompt.image, prompt.job_id)
+        self._answer_question(prompt.question, prompt.image, prompt.job_id, prompt.storing_permission_granted)
 
-    def _answer_question(self, question, image, job_id):
+    def _answer_question(self, question, image, job_id, permission_granted):
         """
         Prep the inputs, ask the question, send the answer to the UI
         """
@@ -124,19 +124,33 @@ class PlantQA:
         question= self._prep_question(question)
 
         # Ask the agent the question and get the answer
-        # TODO: have the agent return confidence, other metadata
         answer, prediction= self._agent.ask_question(image=image, question=question)
         if prediction is not None:
             confidence= prediction.conf_interval
             top_k= prediction.top_k_results
             classification= prediction.plant_classification
+            disease= prediction.get_observations(heads=("disease",))
+            severity= prediction.get_observations(heads=("severity",))
         else:
             confidence= 0
             top_k= None
             classification= None
+            disease= None
+            severity= None
         
         # update the history to have the answer and confidence for the relevant question
         HISTORY.update_answer(job_id, answer, confidence)
+
+        if permission_granted:
+            # User said it's okay to store the interaction in the remote supabase, do that
+            su.log_interaction(
+                self._supabaseClient,
+                question,
+                image,
+                classification,
+                disease,
+                severity,
+            )
 
         # send the answer to the display
         self._displayAPI.send_answer(answer, confidence, job_id, classification, top_k)
