@@ -58,7 +58,7 @@ def load_vqa_dataset():
              "TEST": config_vqa.TEST_FILE,
              "VALID": config_vqa.VALIDATION_FILE}
     datasets = {}
-    for name, file_path in files:
+    for name, file_path in files.items():
         data = text_pre.load_csv(file_path)
         text_pre.preprocess_dataframe(
             data,
