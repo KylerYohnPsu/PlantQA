@@ -48,7 +48,7 @@ Credentials for any necessary service, Anthropic key for evaluation and Supabase
 ## Running
 
 After the project has been installed, you can execute code through the `Full_System.ipynb` notebook.
-Ensure the kernel the notebook is using is the created `venv` environment. Open http://127.0.0.1:8000 which will present the 
+Ensure the kernel the notebook is using is the created `venv` environment. Open http://127.0.0.1:8000/ui.html which will present the 
 locally hosted website.
 
 ## Testing
