@@ -145,8 +145,8 @@ class PlantQA:
             # User said it's okay to store the interaction in the remote supabase, do that
             su.log_interaction(
                 self._supabaseClient,
-                question,
                 image,
+                question,
                 classification,
                 disease,
                 severity,
