@@ -160,6 +160,7 @@ class PlantQA:
         preprocess the question data
         """
         question= text_pre.normalize_whitespace(question)
+        return question
 
     def _cleanup(self):
         """
