@@ -2,6 +2,11 @@
 import supabase
 import os
 from dotenv import load_dotenv
+import base64
+import io
+import numpy as np
+from PIL import Image
+
 def query_embeddings(supabase_client, query, plant_code = None, common_name = None, scientific_name = None,
                      genus = None, match_count = 10, match_threshold = .6):
     if hasattr(query, "tolist"):
@@ -19,6 +24,10 @@ def query_embeddings(supabase_client, query, plant_code = None, common_name = No
 
 def log_interaction(supabase_client, user_image, user_question,
                     predicted_crop=None, predicted_disease=None, predicted_status=None):
+    io_buffer = io.BytesIO()
+    Image.fromarray(np.asarray(user_image).astype("uint8")).save(io_buffer, format="PNG")
+    user_image = base64.b64encode(io_buffer.getvalue()).decode()
+
     result = supabase_client.rpc("log_interaction", {
         "new_image": user_image,
         "new_question": user_question,

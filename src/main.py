@@ -146,8 +146,8 @@ class PlantQA:
             # User said it's okay to store the interaction in the remote supabase, do that
             su.log_interaction(
                 self._supabaseClient,
-                question,
                 image,
+                question,
                 classification,
                 disease,
                 severity,
@@ -161,6 +161,7 @@ class PlantQA:
         preprocess the question data
         """
         question= text_pre.normalize_whitespace(question)
+        return question
 
     def _cleanup(self):
         """
