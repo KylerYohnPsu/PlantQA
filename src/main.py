@@ -16,6 +16,7 @@ import argparse
 import threading
 import time
 import random
+import traceback
 
 class PlantQA:
     def __init__(self, ip_address="127.0.0.1", port=8000, match_threshold=0.5,
@@ -89,9 +90,9 @@ class PlantQA:
         except KeyboardInterrupt:
             Logger.info(f"Shutdown command received.")
         except Exception as E:
-            Logger.critical(f"Error in primary PlantQA thread: {E}")
-            self._cleanup()
-            raise E
+            Logger.error(f"Error in primary PlantQA thread:")
+            error= traceback.format_exc()
+            Logger.error(f"\n\n{error}")
         finally:
             self._cleanup()
 
