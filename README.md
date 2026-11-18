@@ -55,6 +55,8 @@ docker pull kyleryohn/plantqa:1.0
 In your docker terminal run the following command to create and run an instance of plant QA
 docker run --init -p 8000:8000 plantqa_test
 
+Once your container is running and all the models have loded, follow the UI path displayed in docker and begin to interact with plantQA!
+
 #### Alternative - Run the Jupyter Notebook
 After the project has been installed, you can execute code through the `Full_System.ipynb` notebook.
 Ensure the kernel the notebook is using is the created `venv` environment. Open http://127.0.0.1:8000/ui.html which will present the 
