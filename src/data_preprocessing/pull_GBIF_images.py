@@ -1,4 +1,5 @@
 """This script will pull more images down from the GBIF dataset"""
+"""WARNING: THIS SCRIPT WILL TAKE DAYS TO RUN"""
 import requests
 from pathlib import Path
 import json

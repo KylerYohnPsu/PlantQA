@@ -45,8 +45,17 @@ The script will exit if any of the steps fail.
 
 Credentials for any necessary service, Anthropic key for evaluation and Supabase key and url for chunk retrieval, you must create your own `.env` file. The `.env.example` file shows a template for users to follow, but crucially should never commit their credentials to our repository 
 
-## Running
+## Methods of Running
+### Docker Image Availability
+The preferred method for interacting with this application is through docker. Utilizing a docker image ensures a user does not have to create a special environment and creates the least amount of friction to be able to run our system.  If you have docker installed please follow the next steps to pull down the image and to begin interacting with PlantQA!
+#### pull down docker image
+run the following command to pull the docker image from the docker repository
+docker pull kyleryohn/plantqa:1.0
+#### run the docker image
+In your docker terminal run the following command to create and run an instance of plant QA
+docker run --init -p 8000:8000 plantqa_test
 
+#### Alternative - Run the Jupyter Notebook
 After the project has been installed, you can execute code through the `Full_System.ipynb` notebook.
 Ensure the kernel the notebook is using is the created `venv` environment. Open http://127.0.0.1:8000/ui.html which will present the 
 locally hosted website.
@@ -110,4 +119,8 @@ Verify all tests pass.  If any tests from the test_setup.py script fail, there i
 | Val Binary IoU (@0.7)| 0.536 |
 | Val Dice loss        | 0.661 |
 | Input size           | 384×384|
+
+
+
+
 

@@ -15,6 +15,9 @@ data/
 From the data set you only need the taxon file for this script to work.
 https://zenodo.org/records/18945687 -- Link to usda images download
 https://zenodo.org/records/20646743 -- link to usda Plants Structured data download
+
+
+WARNING: RUNTIME FOR THIS SCRIPT IS OVER MULTIPLE DAYS, IT CAN ALSO RUN INTO ISSUES WITH THE USDA WEBSITE STOPPING THE REQUESTS
 """
 #global access
 plant_df = None
