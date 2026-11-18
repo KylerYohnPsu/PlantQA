@@ -19,6 +19,10 @@ import random
 import traceback
 
 class PlantQA:
+    """
+    This class is essentially the entire system.  Making this and then using the run() function will
+    make all of the models and launch the UI.
+    """
     def __init__(self, ip_address="127.0.0.1", port=8000, match_threshold=0.5,
                  unet_weights= None, visual_model_weights=None,
                  visual_model_json=None, response_model_adapter=None):
@@ -85,6 +89,7 @@ class PlantQA:
         Logger.critical("PlantQA running and ready!")
 
         try :
+            # Run until the user kills it
             while self._run:
                 self._vqa_loop()
         except KeyboardInterrupt:
@@ -97,7 +102,10 @@ class PlantQA:
             self._cleanup()
 
     def _vqa_loop(self):
-        
+        """
+        Primary execution loop that takes prompts and builds answers to them.
+        Called by run()
+        """
         self._displayAPI.set_status(SystemStatus.READY)
 
         # get the prompt from UI server
@@ -126,6 +134,9 @@ class PlantQA:
 
         # Ask the agent the question and get the answer
         answer, prediction= self._agent.ask_question(image=image, question=question)
+
+        # Parse the prediction
+        # If there is no prediction, just set everything to none
         if prediction is not None:
             confidence= prediction.conf_interval
             top_k= prediction.top_k_results
