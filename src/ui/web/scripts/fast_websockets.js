@@ -59,7 +59,6 @@ function status_socket_open() {
 
 function status_socket_error(error) {
     posting.py_log(`STATUS SOCKET ERROR: ${error}`);
-    STATUS_SOCKET.close();
 }
 
 function status_socket_close() {
@@ -91,6 +90,7 @@ function initialize_answer_socket() {
     if (answer_socket_ready())
         return;
 
+    posting.py_log("Initializing answer websocket frontend")
     ANSWER_SOCKET = new WebSocket("ws://127.0.0.1:8000/answer");
 
     ANSWER_SOCKET.onopen = answer_socket_open;
@@ -101,6 +101,14 @@ function initialize_answer_socket() {
 
 async function answer_socket_receive(event) {
     const answer_data= JSON.parse(event.data);
+    if (answer_data.type === "heartbeat") {
+        return; // heartbeat message, nothing to do
+    }
+    
+    if (answer_data.type !== "answer") {
+        posting.py_log(`Unknown message type received: ${answer_data.type}`)
+    }
+
     const answer= answer_data.answer;
     const confidence= answer_data.confidence;
     const job_id= answer_data.job_id;
@@ -133,7 +141,6 @@ function answer_socket_open() {
 
 function answer_socket_error(error) {
     posting.py_log(`ANSWER SOCKET ERROR: ${error}`);
-    ANSWER_SOCKET.close();
 }
 
 function answer_socket_close() {

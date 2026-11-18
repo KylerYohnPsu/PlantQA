@@ -117,10 +117,17 @@ export function update_status_text(status) {
     }//switch
 }
 
+let ANSWER_TIMEOUT= null;
+
 export function set_answer(new_answer) {
     const placeholder= document.getElementById("answer-placeholder");
     const answer= document.getElementById("answer");
     const loading= document.getElementById("answer-loading")
+
+    if (ANSWER_TIMEOUT !== null) {
+        clearTimeout(ANSWER_TIMEOUT);
+        ANSWER_TIMEOUT= null;
+    }
 
     placeholder.style.display= "none";
     loading.style.display= "none";
@@ -135,7 +142,9 @@ export function set_answer(new_answer) {
             answer.textContent+= new_answer[char_index];
             char_index++;
 
-            setTimeout(type_next_character, speed);
+            ANSWER_TIMEOUT= setTimeout(type_next_character, speed);
+        } else {
+            ANSWER_TIMEMOUT= null;
         }
     }
 

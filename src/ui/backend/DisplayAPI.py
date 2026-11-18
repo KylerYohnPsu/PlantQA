@@ -54,13 +54,14 @@ class DisplayAPI:
         """
         Prep the server settings
         """
-        config= uvicorn.Config(self.app, host=host, port=port)
+        config= uvicorn.Config(self.app, host=host, port=port, access_log=False)
         self._server= uvicorn.Server(config)
 
     def start(self, host="127.0.0.1", port=8000):
         """
         Launch the server
         """
+        Logger.info("Initializing UI Backend")
         self._run= True
 
         # Prep the server
@@ -78,6 +79,7 @@ class DisplayAPI:
         """
         Kill the UI server
         """
+
         if self._server is None:
             Logger.info(f"Server does not exist, nothing to stop.")
             return
@@ -119,6 +121,7 @@ class DisplayAPI:
 
         # This is the answer ditcionary that will be sent to the frontend
         answer= {
+            "type": "answer",
             "answer": answer, 
             "confidence": round(confidence,3), 
             "job_id": job_id,
@@ -317,14 +320,18 @@ class DisplayAPI:
                     # Get an answer from teh queue
                     answer= await asyncio.to_thread(self._get_answer)
                     if answer is None:
-                        await asyncio.sleep(0.1)
-                        continue # No answer to send
+                        await websocket.send_json({"type":"heartbeat"}) #send connection heartbeat
+                        await asyncio.sleep(0.3)
+                        continue
 
                     # Send the answer to the UI for it to display
-                    Logger.info(f"Answer Json: {answer}")
+                    Logger.info("ANSWER: Attempting to send JSON")
+
                     await websocket.send_json(answer)
-            except WebSocketDisconnect:
-                pass
+
+                    Logger.info("ANSWER: JSON sent successfully")
+            except WebSocketDisconnect as E:
+                Logger.info(f"Answer websocket disconnected. \nCode={E.code}, Reason={E.reason}")
             except Exception as E:
                 Logger.error(f"Answer Updater Error: {E}")
             finally:
@@ -351,8 +358,8 @@ class DisplayAPI:
 
                     # dont kill the cpu
                     await asyncio.sleep(0.5)
-            except WebSocketDisconnect:
-                pass
+            except WebSocketDisconnect as E:
+                Logger.info(f"Status websocket disconnected. \nCode={E.code}, Reason={E.reason}")
             except Exception as E:
                 Logger.error(f"Status Updater Error: {E}")
             finally:
