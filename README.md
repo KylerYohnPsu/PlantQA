@@ -55,7 +55,7 @@ run the following command to pull the docker image from the docker repository
 #### run the docker image
 In your docker terminal run the following command to create and run an instance of plant QA
 
-`docker run --init -p 8000:8000 plantqa_test`
+`docker run --init -p 8000:8000 kyleryohn/plantqa:1.0`
 
 Once your container is running and all the models have loded, follow the UI path displayed in docker and begin to interact with plantQA!
 
